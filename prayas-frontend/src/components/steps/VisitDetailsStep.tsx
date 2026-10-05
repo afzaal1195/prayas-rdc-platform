@@ -59,7 +59,7 @@ export function VisitDetailsStep({ form, errors, onChange }: Props) {
       </p>
 
       <div className="field-grid">
-        <div className="field">
+        <div className="field full">
           <label htmlFor="visitDate">Visit date *</label>
           <DateInput id="visitDate" value={form.visitDate} onChange={(v) => onChange({ visitDate: v })} />
           {errors.visitDate && <span className="field-error">{errors.visitDate}</span>}

@@ -6,6 +6,7 @@ import { VenuesStep } from '../components/steps/VenuesStep';
 import { LogisticsStep } from '../components/steps/LogisticsStep';
 import { ReviewStep } from '../components/steps/ReviewStep';
 import { SuccessScreen } from '../components/SuccessScreen';
+import { StaffHeader } from '../components/staff/StaffHeader';
 import { emptyFormState, toPayload, validateStep, type FormState } from './formState';
 import { fetchVenues, submitTourRequest } from '../api/tourApi';
 import { extractErrorMessage } from '../api/errors';
@@ -69,79 +70,70 @@ export function RequestTourPage() {
     }
   };
 
-  if (result) {
-    return <SuccessScreen result={result} />;
-  }
-
   return (
-    <div className="page">
-      <header className="page-header">
-       <div className="page-header-logos">
-        <img src="/prayas-logo-header.png" alt="PRAYAS" className="logo-prayas" />
-        <span className="logo-divider" aria-hidden="true" />
-        <img src="/rdc-logo.png" alt="Rural Development Center" className="logo-rdc" />
-        <span className="logo-divider" aria-hidden="true" />
-        <img src="/iith-logo.png" alt="Indian Institute of Technology Hyderabad" className="logo-iith" />
-       </div>
-        <h1>Book a campus tour</h1>
-      </header>
+    <div className="page page-staff">
+      <StaffHeader title="Book a campus tour" />
 
-      <div className="form-layout">
-        <StepTracker steps={STEPS} currentStep={step} />
+      {result ? (
+        <SuccessScreen result={result} />
+      ) : (
+        <div className="form-layout">
+          <StepTracker steps={STEPS} currentStep={step} />
 
-        <div className="form-panel">
-          <div className="form-panel-content">
-            {/* Honeypot: real users never see or fill this. */}
-            <input
-              type="text"
-              name="website"
-              value={form.website}
-              onChange={(e) => onChange({ website: e.target.value })}
-              className="honeypot"
-              tabIndex={-1}
-              autoComplete="off"
-              aria-hidden="true"
-            />
-
-            {submitError && <div className="submit-error">{submitError}</div>}
-
-            {step === 0 && <SchoolStep form={form} errors={errors} onChange={onChange} />}
-            {step === 1 && <VisitDetailsStep form={form} errors={errors} onChange={onChange} />}
-            {step === 2 && (
-              <VenuesStep
-                form={form}
-                errors={errors}
-                venues={venues}
-                venuesLoading={venuesLoading}
-                venuesError={venuesError}
-                onChange={onChange}
+          <div className="form-panel">
+            <div className="form-panel-content">
+              {/* Honeypot: real users never see or fill this. */}
+              <input
+                type="text"
+                name="website"
+                value={form.website}
+                onChange={(e) => onChange({ website: e.target.value })}
+                className="honeypot"
+                tabIndex={-1}
+                autoComplete="off"
+                aria-hidden="true"
               />
-            )}
-            {step === 3 && <LogisticsStep form={form} errors={errors} onChange={onChange} />}
-            {step === 4 && <ReviewStep form={form} venues={venues} />}
 
-            <div className="button-row">
-              {step > 0 ? (
-                <button type="button" className="btn btn-secondary" onClick={goBack} disabled={submitting}>
-                  Back
-                </button>
-              ) : (
-                <span />
-              )}
+              {submitError && <div className="submit-error">{submitError}</div>}
 
-              {step < STEPS.length - 1 ? (
-                <button type="button" className="btn btn-primary" onClick={goNext}>
-                  Continue
-                </button>
-              ) : (
-                <button type="button" className="btn btn-primary" onClick={handleSubmit} disabled={submitting}>
-                  {submitting ? 'Sending…' : 'Send request'}
-                </button>
+              {step === 0 && <SchoolStep form={form} errors={errors} onChange={onChange} />}
+              {step === 1 && <VisitDetailsStep form={form} errors={errors} onChange={onChange} />}
+              {step === 2 && (
+                <VenuesStep
+                  form={form}
+                  errors={errors}
+                  venues={venues}
+                  venuesLoading={venuesLoading}
+                  venuesError={venuesError}
+                  onChange={onChange}
+                />
               )}
+              {step === 3 && <LogisticsStep form={form} errors={errors} onChange={onChange} />}
+              {step === 4 && <ReviewStep form={form} venues={venues} />}
+
+              <div className="button-row">
+                {step > 0 ? (
+                  <button type="button" className="btn btn-secondary" onClick={goBack} disabled={submitting}>
+                    Back
+                  </button>
+                ) : (
+                  <span />
+                )}
+
+                {step < STEPS.length - 1 ? (
+                  <button type="button" className="btn btn-primary" onClick={goNext}>
+                    Continue
+                  </button>
+                ) : (
+                  <button type="button" className="btn btn-primary" onClick={handleSubmit} disabled={submitting}>
+                    {submitting ? 'Sending…' : 'Send request'}
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

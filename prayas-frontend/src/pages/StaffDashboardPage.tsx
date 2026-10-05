@@ -49,7 +49,7 @@ export function StaffDashboardPage() {
   const me = session.me;
 
   return (
-    <StaffLayout me={me} active="requests" title="Staff dashboard">
+    <StaffLayout me={me} active="requests" title="DASHBOARD">
       {me.canViewTours ? (
         <RequestsPanel me={me} />
       ) : (

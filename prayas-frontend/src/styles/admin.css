@@ -9,13 +9,14 @@
   padding: 0.45rem 1rem;
   border-radius: 3px;
   text-decoration: none;
-  color: var(--ink-soft);
+  background: var(--border);
+  color: var(--ink);
   font-size: 0.92rem;
   font-weight: 500;
 }
 
 .staff-nav a:hover {
-  background: var(--border);
+  background: #C9BEAB;
 }
 
 .staff-nav a.active {
@@ -243,4 +244,106 @@
 .btn-danger:disabled {
   opacity: 0.45;
   cursor: not-allowed;
+}
+
+.page-header h1.staff-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: 0.2rem;
+  text-transform: uppercase;
+  padding-bottom: 0.2rem;
+}
+
+.page-header h1.staff-title::after {
+  content: '';
+  display: block;
+  width: 48px;
+  height: 3px;
+  margin: 0.45rem auto 0;
+  background: var(--accent);
+  border-radius: 2px;
+}
+
+/* Staff header scrolls with the page: with the quote it is too tall to stay pinned */
+.page.page-staff {
+  padding-top: 0;
+}
+
+.page-staff .page-header {
+  position: relative;
+  padding-top: 0.5rem;
+  padding-bottom: 0.9rem;
+}
+
+.header-user {
+  position: absolute;
+  top: 1.25rem;
+  right: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.5rem;
+  max-width: 22rem;
+  text-align: right;
+}
+
+.page-staff .header-user .header-logout {
+  position: static;
+  transform: none;
+}
+
+.header-user .who {
+  font-size: 0.85rem;
+  line-height: 1.35;
+  color: var(--ink-soft);
+}
+
+.header-user .who strong {
+  color: var(--ink);
+}
+
+@media (max-width: 900px) {
+  .header-user {
+    position: static;
+    align-items: center;
+    max-width: none;
+    margin: 0.75rem auto 0;
+    text-align: center;
+  }
+}
+
+.header-quote {
+  margin: 0.4rem auto 0;
+  padding: 0 1rem;
+  max-width: 52rem;
+  text-align: center;
+}
+
+.header-quote blockquote {
+  margin: 0;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 400;
+  font-size: clamp(1.05rem, 0.9rem + 0.6vw, 1.35rem);
+  line-height: 1.45;
+  color: var(--ink-soft);
+  text-wrap: balance;
+}
+
+.header-quote figcaption {
+  margin-top: 0.35rem;
+  font-family: var(--font-body);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent-dark);
+}
+
+.header-quote figcaption::before {
+  content: '— ';
+}
+
+.header-quote + .staff-title {
+  margin-top: 0.9rem;
 }

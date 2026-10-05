@@ -5,7 +5,7 @@ import type { Me } from '../../api/types';
 import { DOMAIN_ROLE_LABELS, GLOBAL_ROLE_LABELS } from '../../lib/roleLabels';
 import { useDocumentTitle } from '../../hooks/useDocumentTitle';
 import { DevSwitcher } from './DevSwitcher';
-import { StaffHeaderLogos } from './StaffHeaderLogos';
+import { StaffHeader } from './StaffHeader';
 import '../../styles/form.css';
 import '../../styles/dashboard.css';
 import '../../styles/admin.css';
@@ -40,19 +40,19 @@ export function StaffLayout({ me, active, title, children }: Props) {
   };
 
   return (
-    <div className="page">
-      <header className="page-header">
-        <StaffHeaderLogos />
-        <h1>{title}</h1>
-        <button type="button" className="header-logout" onClick={() => (window.location.href = '/logout')}>
-          Log out
-        </button>
-      </header>
+    <div className="page page-staff">
+      <StaffHeader title={title}>
+        <div className="header-user">
+          <button type="button" className="header-logout" onClick={() => (window.location.href = '/logout')}>
+            Log out
+          </button>
+          <span className="who">
+            Signed in as <strong>{me.name}</strong> ({describeRoles(me)})
+          </span>
+        </div>
+      </StaffHeader>
 
       <div className="dashboard-toolbar">
-        <span className="who">
-          Signed in as <strong>{me.name}</strong> ({describeRoles(me)})
-        </span>
         <nav className="staff-nav" aria-label="Staff sections">
           <Link to="/staff" className={active === 'requests' ? 'active' : ''}>
             Tour requests

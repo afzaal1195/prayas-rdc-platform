@@ -203,3 +203,39 @@ table.request-table {
   padding: 3rem 1rem;
   color: var(--ink-soft);
 }
+
+/* --- sign-in button: loading state --- */
+
+.dashboard-login .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  text-decoration: none;
+}
+
+.dashboard-login .btn.is-loading {
+  background: var(--accent-dark);
+  cursor: progress;
+}
+
+.btn-spinner {
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: btn-spin 0.8s linear infinite;
+}
+
+@keyframes btn-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.login-status {
+  margin: 1rem auto 0;
+  min-height: 1.5em;
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+}
