@@ -16,6 +16,7 @@
   padding: 2.5rem 2rem;
   max-width: 1600px;
   margin: 0 auto;
+  gap: 1rem;
 }
 
 .dashboard-toolbar .who {
