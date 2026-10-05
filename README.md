@@ -6,6 +6,38 @@ Today a visit is arranged over calls, messages and spreadsheets. This platform g
 
 **Status:** Phase 1 and the first milestone of Phase 2 are complete and running locally. The project is not deployed yet. See [Roadmap](#roadmap) for what is still to come.
 
+## Screenshots
+
+### For schools and colleges
+
+A five-step request form that needs no login:
+
+| 1. School and contact | 2. Visit details | 3. Venues | 4. Logistics |
+| --- | --- | --- | --- |
+| [![Step 1](docs/schools/step-1-school-contact.png)](docs/schools/step-1-school-contact.png) | [![Step 2](docs/schools/step-2-visit-details.png)](docs/schools/step-2-visit-details.png) | [![Step 3](docs/schools/step-3-venues.png)](docs/schools/step-3-venues.png) | [![Step 4](docs/schools/step-4-logistics.png)](docs/schools/step-4-logistics.png) |
+
+| 5. Review before sending | Request sent, with a private tracking link |
+| --- | --- |
+| [![Review](docs/schools/step-5-review.png)](docs/schools/step-5-review.png) | [![Request sent](docs/schools/request-sent.png)](docs/schools/request-sent.png) |
+
+**A repeat request is blocked** while the same school or contact number already has a pending or approved one:
+
+![Repeat request blocked](docs/schools/repeat-request-blocked.png)
+
+### For staff
+
+| Sign in | Coordinator view (read-only) |
+| --- | --- |
+| [![Staff sign-in](docs/staff/sign-in.png)](docs/staff/sign-in.png) | [![Coordinator dashboard](docs/staff/dashboard-coordinator.png)](docs/staff/dashboard-coordinator.png) |
+
+**Lead and faculty in-charge dashboard**, with approve, reject and reopen:
+
+![Lead dashboard](docs/staff/dashboard-lead.png)
+
+| Venues | Approval contacts | Staff and roles |
+| --- | --- | --- |
+| [![Venues](docs/staff/admin-venues.png)](docs/staff/admin-venues.png) | [![Approval contacts](docs/staff/admin-approval-contacts.png)](docs/staff/admin-approval-contacts.png) | [![Staff and roles](docs/staff/admin-staff-roles.png)](docs/staff/admin-staff-roles.png) |
+
 ## Features
 
 ### For schools and colleges (no login needed)
