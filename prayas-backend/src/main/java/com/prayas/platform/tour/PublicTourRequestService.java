@@ -14,6 +14,7 @@ import java.time.LocalTime;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.Locale;
 
 @Service
 public class PublicTourRequestService {
@@ -54,6 +55,16 @@ public class PublicTourRequestService {
         this.decisionService = decisionService;
     }
 
+        /**
+     * A school with a request in one of these states may not send another until staff decide
+     * it. An approved tour blocks too, until its visit date has passed (see
+     * CampusTourDetailsRepository.findBlockingRequests).
+     */
+    private static final List<ProgrammeStatus> PENDING_STATUSES = List.of(
+            ProgrammeStatus.SUBMITTED,
+            ProgrammeStatus.UNDER_REVIEW,
+            ProgrammeStatus.RESCHEDULE_PROPOSED);
+
     @Transactional
     public TourRequestCreated submit(TourRequestCreate request, String remoteIp) {
         // Honeypot: a real school never fills a field named "website" that's
@@ -69,6 +80,7 @@ public class PublicTourRequestService {
         validateTimes(request.arrivalTime(), request.departureTime());
         Breakdown breakdown = resolveBreakdown(request.institutionType(), request.grades(), request.courses());
         Integer mealCount = validateLunch(request.lunch());
+        rejectIfRequestAlreadyOpen(request);
 
         School school = new School(request.school().name());
         school.setAddress(request.school().address());
@@ -116,6 +128,66 @@ public class PublicTourRequestService {
 
         return new TourRequestCreated(programme.getId(), token.rawToken(), programme.getStatus());
     }
+
+
+        /**
+     * One open request per school. Schools have no accounts, so a repeat is spotted
+     * two ways: the same contact phone, or the same school (name + town + district,
+     * ignoring case, spaces and punctuation, so "D.A.V. Public School" matches
+     * "DAV public school"). The school match is what catches a different teacher
+     * from the same school. The existing tracking link already lets a school change
+     * the date, the headcount or the lunch, or cancel, so a second request is
+     * almost always a mistake or a lost link. The message deliberately gives away
+     * nothing about the other request (no id, date or status).
+     */
+        /**
+     * One live request per school. A request is "live" while it is pending, or approved
+     * with a visit date that has not passed. A repeat is spotted two ways: the same
+     * contact phone, or the same school (name + town + district, ignoring case, spaces
+     * and punctuation, so "D.A.V. Public School" matches "DAV public school"). The school
+     * match is what catches a different teacher from the same school. The existing
+     * tracking link already lets a school check its request and cancel it, so a second
+     * request is almost always a mistake or a lost link. The message deliberately gives
+     * away nothing about the other request (no id, date or status).
+     */
+    private void rejectIfRequestAlreadyOpen(TourRequestCreate request) {
+        String phone = phoneKey(request.contact().phone());
+        String school = schoolKey(request.school().name(),
+                request.school().villageOrTown(), request.school().district());
+
+        for (CampusTourDetails live : tourDetailsRepository.findBlockingRequests(PENDING_STATUSES, LocalDate.now())) {
+            School other = live.getSchool();
+            boolean samePhone = !phone.isEmpty() && phone.equals(phoneKey(live.getContactPhone()));
+            boolean sameSchool = !school.isEmpty()
+                    && school.equals(schoolKey(other.getName(), other.getVillageOrTown(), other.getDistrict()));
+            if (samePhone || sameSchool) {
+                throw new DuplicateOpenRequestException(
+                        "This school or contact number already has a campus tour request that is waiting "
+                                + "for a decision or has been approved. To see its status or cancel it, open "
+                                + "the tracking link that was saved when it was sent (a colleague may have it). "
+                                + "If the link is lost, please contact PRAYAS and we will send a new one.");
+            }
+        }
+    }
+
+    /** Digits only, last 10: so "+91 98765-43210" and "9876543210" are the same number. */
+    static String phoneKey(String phone) {
+        String digits = phone == null ? "" : phone.replaceAll("\\D", "");
+        return digits.length() > 10 ? digits.substring(digits.length() - 10) : digits;
+    }
+
+    /** Name + town + district with case, spaces and punctuation removed. Empty if there is no name. */
+    static String schoolKey(String name, String villageOrTown, String district) {
+        String n = squash(name);
+        return n.isEmpty() ? "" : n + "|" + squash(villageOrTown) + "|" + squash(district);
+    }
+
+    private static String squash(String text) {
+        return text == null ? "" : text.toLowerCase(Locale.ROOT).replaceAll("[^\\p{L}\\p{N}]", "");
+    }
+
+
+    
 
     private void validateVisitDate(LocalDate visitDate) {
         LocalDate earliestAllowed = LocalDate.now().plusDays(props.getMinAdvanceDays());

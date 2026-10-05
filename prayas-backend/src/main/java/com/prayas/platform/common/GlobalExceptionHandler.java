@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import com.prayas.platform.tour.DuplicateOpenRequestException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -29,6 +30,12 @@ public class GlobalExceptionHandler {
     public ProblemDetail capExceeded(DailyCapExceededException e) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, e.getMessage());
     }
+    
+        @ExceptionHandler(DuplicateOpenRequestException.class)
+    public ProblemDetail duplicateOpenRequest(DuplicateOpenRequestException e) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, e.getMessage());
+    }
+
 
     @ExceptionHandler(IllegalStateException.class)
     public ProblemDetail conflict(IllegalStateException e) {

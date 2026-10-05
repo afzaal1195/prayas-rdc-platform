@@ -51,7 +51,7 @@ export function RequestTourPage() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleSubmit = async () => {
+   const handleSubmit = async () => {
     // TODO: replace with a real hCaptcha widget token before this leaves
     // local dev -- the backend's NoOpCaptchaVerifier (@Profile("local"))
     // accepts any non-blank string, real HCaptchaVerifier will not.
@@ -64,6 +64,7 @@ export function RequestTourPage() {
       setResult(created);
     } catch (err) {
       setSubmitError(extractErrorMessage(err));
+      window.scrollTo({ top: 0, behavior: 'smooth' }); // the message sits at the top of the form
       console.error(err);
     } finally {
       setSubmitting(false);
