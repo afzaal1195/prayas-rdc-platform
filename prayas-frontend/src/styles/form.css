@@ -1,0 +1,490 @@
+.page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding-top: 100px;
+}
+
+.page-header {
+  padding: 0rem 2rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--paper-raised);
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 2;
+}
+
+.header-logout {
+  position: absolute;
+  top: 50%;
+  right: 2rem;
+  transform: translateY(-50%);
+  background: var(--ink);
+  color: white;
+  border: none;
+  border-radius: 3px;
+  padding: 0.6rem 1.2rem;
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.header-logout:hover {
+  background: var(--ink-soft);
+}
+
+.page-header-logos {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  margin: 0 0 0.25rem 0;
+}
+
+.page-header-logos .logo-prayas {
+  height: 70px;
+  width: auto;
+}
+
+.page-header-logos .logo-divider {
+  width: 1px;
+  height: 50px;
+  background: var(--border);
+}
+
+
+.page-header-logos .logo-rdc {
+  height: 90px;
+  width: auto;
+}
+
+.page-header-logos .logo-iith {
+  height: 70px;
+  width: auto;
+}
+
+.page-header h1 {
+  font-size: 2.1rem;
+  margin: 0;
+   text-align: center;
+}
+
+.form-layout {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  max-width: 980px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 2.5rem 2rem 4rem;
+  gap: 3rem;
+}
+
+@media (max-width: 720px) {
+  .form-layout {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    padding: 1.5rem 1.25rem 3rem;
+  }
+}
+
+/* --- step tracker --- */
+
+.step-tracker {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  position: relative;
+}
+
+@media (max-width: 720px) {
+  .step-tracker {
+    flex-direction: row;
+    overflow-x: auto;
+    gap: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+}
+
+.step-tracker-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.85rem;
+  padding: 0.65rem 0;
+  position: relative;
+}
+
+@media (max-width: 720px) {
+  .step-tracker-item {
+    flex-direction: column;
+    align-items: center;
+    padding: 0.25rem;
+    min-width: 72px;
+    text-align: center;
+  }
+}
+
+.step-tracker-item:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  left: 15px;
+  top: 40px;
+  width: 1px;
+  height: calc(100% - 8px);
+  background: var(--border);
+}
+
+@media (max-width: 720px) {
+  .step-tracker-item::after {
+    display: none;
+  }
+}
+
+.step-number {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  color: var(--ink-soft);
+  background: var(--paper);
+  z-index: 1;
+}
+
+.step-tracker-item.active .step-number {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: white;
+}
+
+.step-tracker-item.done .step-number {
+  border-color: var(--success);
+  background: var(--success);
+  color: white;
+}
+
+.step-label {
+  padding-top: 0.35rem;
+}
+
+.step-label .name {
+  font-weight: 500;
+  font-size: 0.95rem;
+  color: var(--ink);
+}
+
+.step-tracker-item:not(.active) .step-label .name {
+  color: var(--ink-soft);
+}
+
+/* --- form panel --- */
+
+.form-panel {
+  position: relative;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+}
+
+.form-panel::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url('/prayas-watermark.png');
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 120%;
+  opacity: 0.2;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.form-panel-content {
+  position: relative;
+  z-index: 1;
+  padding: 1.25rem 2rem;
+}
+@media (max-width: 720px) {
+  .form-panel-content {
+    padding: 1.25rem;
+  }
+}
+
+.form-panel h2 {
+  font-size: 1.3rem;
+  margin-bottom: 0.3rem;
+}
+
+.form-panel .step-intro {
+  color: var(--ink-soft);
+  margin-bottom: 1.75rem;
+}
+
+.field-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+}
+
+@media (max-width: 560px) {
+  .field-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-bottom: 1.25rem;
+}
+
+.field.full {
+  grid-column: 1 / -1;
+}
+
+.field label {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.field .hint {
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+  margin-top: -0.15rem;
+}
+
+.field input,
+.field select,
+.field textarea {
+  font-family: var(--font-body);
+  font-size: 1rem;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+  border-color: var(--accent);
+}
+
+.field textarea {
+  resize: vertical;
+  min-height: 5rem;
+}
+
+.field-error {
+  font-size: 0.85rem;
+  color: var(--error);
+}
+
+.honeypot {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* --- venue picker --- */
+
+.venue-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.venue-card {
+  border: 1.5px solid var(--border);
+  border-radius: 4px;
+  padding: 1rem;
+  cursor: pointer;
+  background: var(--paper);
+  text-align: left;
+}
+
+.venue-card.selected {
+  border-color: var(--accent);
+  background: #FBF0E0;
+}
+
+.venue-card h3 {
+  font-size: 1rem;
+  margin: 0 0 0.25rem 0;
+}
+
+.venue-card p {
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+  margin: 0;
+}
+
+/* --- teacher rows --- */
+
+.teacher-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 0.75rem;
+  align-items: end;
+  margin-bottom: 1rem;
+}
+
+@media (max-width: 560px) {
+  .teacher-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* --- buttons --- */
+
+.button-row {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+}
+
+.btn {
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  font-weight: 500;
+  padding: 0.7rem 1.5rem;
+  border-radius: 3px;
+  border: 1px solid transparent;
+  cursor: pointer;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: white;
+}
+
+.btn-primary:hover {
+  background: var(--accent-dark);
+}
+
+.btn-primary:disabled {
+  background: var(--border);
+  color: var(--ink-soft);
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  background: transparent;
+  border-color: var(--border);
+  color: var(--ink);
+}
+
+.btn-secondary:hover {
+  border-color: var(--ink-soft);
+}
+
+.btn-text {
+  background: none;
+  border: none;
+  color: var(--accent-dark);
+  padding: 0.4rem 0;
+  text-decoration: underline;
+}
+
+/* --- review step --- */
+
+.review-section {
+  margin-bottom: 1.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.review-section:last-child {
+  border-bottom: none;
+}
+
+.review-section h3 {
+  font-size: 1rem;
+  margin-bottom: 0.6rem;
+}
+
+.review-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.3rem 0;
+  font-size: 0.95rem;
+}
+
+.review-row .k {
+  color: var(--ink-soft);
+}
+
+.review-row .v {
+  text-align: right;
+  font-weight: 500;
+}
+
+.submit-error {
+  background: #FBEAE6;
+  border: 1px solid var(--error);
+  color: var(--error);
+  padding: 0.85rem 1rem;
+  border-radius: 3px;
+  margin-bottom: 1.25rem;
+  font-size: 0.9rem;
+}
+
+/* --- success screen --- */
+
+.success-screen {
+  max-width: 560px;
+  margin: 4rem auto;
+  padding: 0 2rem;
+  text-align: center;
+}
+
+.success-mark {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--success);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+  margin: 0 auto 1.5rem;
+}
+
+.tracking-box {
+  background: var(--paper-raised);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1.25rem;
+  margin: 1.5rem 0;
+  text-align: left;
+}
+
+.tracking-box .token {
+  font-family: monospace;
+  font-size: 0.95rem;
+  word-break: break-all;
+  background: var(--paper);
+  padding: 0.5rem 0.75rem;
+  border-radius: 3px;
+  display: block;
+  margin-top: 0.5rem;
+}

@@ -1,0 +1,22 @@
+spring:
+  jpa:
+    show-sql: true
+
+logging:
+  level:
+    com.prayas.platform: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.springframework.security: DEBUG
+
+# Local testing submits many requests from one IP; outside the local
+# profile the limit falls back to the strict default of 5/hour.
+prayas:
+  tour:
+    rate-limit-per-hour: 1000
+
+# NoOpCaptchaVerifier (@Profile("local")) takes over from HCaptchaVerifier
+# automatically -- no captcha secret needed for local testing.
+# Google OAuth2 client id/secret come from application.yml's
+# ${GOOGLE_CLIENT_ID:} / ${GOOGLE_CLIENT_SECRET:} placeholders, set via
+# environment variables when you need real staff login. Leaving them
+# unset is fine as long as you only hit /api/v1/public/** endpoints.

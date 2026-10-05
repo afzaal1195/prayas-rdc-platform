@@ -1,0 +1,78 @@
+:root {
+  --ink: #1B2A41;
+  --ink-soft: #3E4E64;
+  --paper: #FBF8F3;
+  --paper-raised: #FFFFFF;
+  --border: #D8CFC0;
+  --accent: #C97F1D;
+  --accent-dark: #A5670F;
+  --success: #3C6E47;
+  --error: #A3402E;
+
+  --font-display: 'Source Serif 4', Georgia, serif;
+  --font-body: 'IBM Plex Sans', -apple-system, sans-serif;
+
+  color-scheme: light;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Fixed, low-opacity institutional watermark behind every page. Sits below
+   all content (z-index: 0); opaque UI surfaces like .form-panel naturally
+   cover it in their own area, so it mainly reads in the page margins and
+   header -- a single large centered mark rather than a tiled/repeated
+   pattern, which reads as premium rather than busy. */
+
+/* Watermark now lives on .form-panel (see form.css) instead of body,
+   so it's positioned relative to the panel's own box -- that keeps it
+   correctly aligned at any zoom level or viewport width, instead of
+   drifting relative to the centered, max-width-capped layout. */
+
+h1, h2, h3 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  line-height: 1.2;
+  margin: 0 0 0.5em 0;
+  color: var(--ink);
+}
+
+p {
+  margin: 0 0 1em 0;
+  max-width: 65ch;
+}
+
+button {
+  font-family: inherit;
+}
+
+a {
+  color: var(--accent-dark);
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

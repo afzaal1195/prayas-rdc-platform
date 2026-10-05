@@ -1,0 +1,17 @@
+# build output and dependencies
+target/
+node_modules/
+dist/
+
+# editor and local files
+.vscode/
+*.log
+.env
+.env.*
+
+# personal notes and backups, not part of the project
+*.zip
+/gAUTHproject.png
+/Images/
+/Testing & Errors/
+/prayas-project-progress-log*.md
