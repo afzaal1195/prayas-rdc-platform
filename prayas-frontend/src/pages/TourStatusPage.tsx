@@ -205,6 +205,8 @@ export function TourStatusPage() {
   };
 
   const canEdit = status != null && EDITABLE_STATUSES.includes(status.status);
+  // A different date can be asked for before a decision and after approval.
+  const canRequestDateChange = status != null && (canEdit || status.status === 'APPROVED');
   const canCancel = status != null && !['REJECTED', 'CANCELLED', 'COMPLETED'].includes(status.status);
 
   return (
@@ -236,11 +238,35 @@ export function TourStatusPage() {
                 </p>
               )}
 
+              {status.pendingVisitDate && (
+                <p style={{ marginTop: '0.75rem' }}>
+                  Your request to change the date to <strong>{formatDateDMY(status.pendingVisitDate)}</strong> is
+                  waiting for approval. Until PRAYAS approves it, your visit date stays{' '}
+                  <strong>{formatDateDMY(status.visitDate)}</strong>.
+                </p>
+              )}
+              {!status.pendingVisitDate && status.dateChangeNote && (
+                <p className="field-error" style={{ marginTop: '0.75rem' }}>
+                  Your request for a different date was not approved: {status.dateChangeNote}
+                </p>
+              )}
+
               <div className="review-section">
                 <div className="review-row">
                   <span className="k">Visit date</span>
                   <span className="v">{formatDateDMY(status.visitDate)}</span>
                 </div>
+                {status.pendingVisitDate && (
+                  <div className="review-row">
+                    <span className="k">Date change requested</span>
+                    <span className="v">
+                      {formatDateDMY(status.pendingVisitDate)}
+                      {status.pendingArrivalTime && status.pendingDepartureTime
+                        ? ` · ${formatTime12h(status.pendingArrivalTime)} to ${formatTime12h(status.pendingDepartureTime)}`
+                        : ''}
+                    </span>
+                  </div>
+                )}
                 {status.proposedDate && (
                   <div className="review-row">
                     <span className="k">Proposed date</span>
@@ -418,12 +444,15 @@ export function TourStatusPage() {
                 </>
               )}
 
-              {canEdit && (
+              {canRequestDateChange && (
                 <>
                   <h2 style={{ marginTop: '1.5rem' }}>Request a different date</h2>
                   <p className="step-intro">
-                    Only available before a decision has been made. The new date must be later than{' '}
-                    {formatDateDMY(status.visitDate)}.
+                    {status.status === 'APPROVED'
+                      ? 'Your visit is approved for '
+                      : 'Your request is currently for '}
+                    {formatDateDMY(status.visitDate)}. If your plans change, ask for a later date here. The new
+                    date takes effect only once PRAYAS approves it; until then your current date stays.
                   </p>
                   <form onSubmit={handleReschedule}>
                     <div className="field-grid">
@@ -447,9 +476,13 @@ export function TourStatusPage() {
                       </div>
                     </div>
                     {rescheduleError && <div className="submit-error">{rescheduleError}</div>}
-                    {rescheduleSuccess && <p style={{ color: 'var(--success)' }}>Date updated successfully.</p>}
+                    {rescheduleSuccess && (
+                      <p style={{ color: 'var(--success)' }}>
+                        Request sent. Your visit date will change only after PRAYAS approves it.
+                      </p>
+                    )}
                     <button type="submit" className="btn btn-primary" disabled={rescheduling || !newDate}>
-                      {rescheduling ? 'Saving…' : 'Request this date'}
+                      {rescheduling ? 'Sending…' : status.pendingVisitDate ? 'Replace my request' : 'Request this date'}
                     </button>
                   </form>
                 </>

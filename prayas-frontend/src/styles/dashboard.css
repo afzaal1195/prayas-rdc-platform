@@ -94,8 +94,15 @@ table.request-table {
   border-bottom: none;
 }
 
-.request-table tbody tr:hover {
-  background: var(--paper);
+/* Hovering a request row tints it warm amber; as soon as the pointer leaves it
+   goes back to the table's white. (It used to turn the same colour as the page
+   and the opened slider.) Only the real rows react, not the slider rows. */
+.request-table tbody tr.clickable-row {
+  transition: background-color 0.15s ease;
+}
+
+.request-table tbody tr.clickable-row:hover {
+  background: #F7EAD3;
 }
 
 .status-badge {
@@ -169,7 +176,7 @@ table.request-table {
 }
 
 .row-detail.open {
-  max-height: 500px;
+  max-height: 1600px;
 }
 
 .row-detail-inner {
@@ -239,4 +246,181 @@ table.request-table {
   min-height: 1.5em;
   font-size: 0.85rem;
   color: var(--ink-soft);
+}
+
+/* --- assigning people to an approved tour --- */
+
+.assign-panel {
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+
+.assign-panel h4 {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  margin: 0 0 0.6rem;
+}
+
+.assign-note {
+  font-size: 0.82rem;
+  color: var(--ink-soft);
+  margin: 0.25rem 0;
+}
+
+.shift-list {
+  list-style: none;
+  margin: 0 0 1rem;
+  padding: 0;
+}
+
+.shift-item {
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.88rem;
+}
+
+.shift-main {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 1rem;
+}
+
+.shift-name {
+  font-weight: 600;
+  min-width: 9rem;
+}
+
+.shift-role {
+  color: var(--ink-soft);
+  min-width: 6.5rem;
+}
+
+.shift-time {
+  flex: 1;
+}
+
+.assign-form,
+.handover-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.6rem 0.9rem;
+  margin-top: 0.6rem;
+}
+
+.assign-form label,
+.handover-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  font-size: 0.78rem;
+  color: var(--ink-soft);
+}
+
+.assign-form select,
+.assign-form input,
+.handover-form select,
+.handover-form input {
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  padding: 0.4rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.assign-form button,
+.handover-form button {
+  font-size: 0.82rem;
+  padding: 0.4rem 0.9rem;
+}
+
+
+/* --- a school's request for a different date, waiting for staff --- */
+
+.date-change-banner {
+  margin-bottom: 1.25rem;
+  padding: 0.9rem 1.1rem;
+  border: 1px solid var(--accent);
+  border-left-width: 4px;
+  border-radius: 4px;
+  background: var(--paper);
+  font-size: 0.9rem;
+}
+
+.date-change-hint {
+  margin: 0.2rem 0 0.6rem;
+  font-size: 0.82rem;
+  color: var(--ink-soft);
+}
+
+.date-change-banner ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.date-change-banner li {
+  padding: 0.5rem 0;
+  border-top: 1px solid var(--border);
+}
+
+.date-change-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+}
+
+.date-change-decline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.date-change-decline input {
+  flex: 1;
+  min-width: 14rem;
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  padding: 0.4rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.date-change-decline button {
+  font-size: 0.82rem;
+  padding: 0.4rem 0.9rem;
+}
+
+.date-change-flag {
+  margin-top: 0.15rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--accent-dark);
+}
+
+.date-change-warning {
+  margin: 0.35rem 0 0;
+  font-size: 0.8rem;
+  color: var(--accent-dark);
+}
+
+/* --- "My tours" page --- */
+
+.my-tours-heading {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  margin: 1.5rem 0 0.6rem;
+}
+
+.my-tours-past {
+  opacity: 0.65;
 }

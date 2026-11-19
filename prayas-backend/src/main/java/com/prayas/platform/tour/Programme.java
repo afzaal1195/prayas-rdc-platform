@@ -34,6 +34,20 @@ public class Programme {
     @Column(name = "proposed_date")
     private LocalDate proposedDate;
 
+    // A school's own request for a different date. Parked here until staff
+    // approve it; visitDate/arrivalTime/departureTime stay as they are until then.
+    @Column(name = "requested_visit_date")
+    private LocalDate requestedVisitDate;
+
+    @Column(name = "requested_arrival_time")
+    private LocalTime requestedArrivalTime;
+
+    @Column(name = "requested_departure_time")
+    private LocalTime requestedDepartureTime;
+
+    @Column(name = "date_change_note", columnDefinition = "text")
+    private String dateChangeNote;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "decided_by")
     private AppUser decidedBy;
@@ -135,6 +149,46 @@ public class Programme {
         this.visitDate = newVisitDate;
         this.updatedAt = Instant.now();
     }
+
+    public boolean hasPendingDateChange() {
+        return requestedVisitDate != null;
+    }
+
+    /** The school asks for a different date. Replaces any earlier request that is still waiting. */
+    public void requestDateChange(LocalDate date, LocalTime arrival, LocalTime departure) {
+        this.requestedVisitDate = date;
+        this.requestedArrivalTime = arrival;
+        this.requestedDepartureTime = departure;
+        this.dateChangeNote = null;
+        this.updatedAt = Instant.now();
+    }
+
+    /** Staff approved: the requested date and times become the real ones. */
+    public void applyRequestedDateChange() {
+        this.visitDate = requestedVisitDate;
+        this.arrivalTime = requestedArrivalTime;
+        this.departureTime = requestedDepartureTime;
+        clearPendingDateChange();
+    }
+
+    /** Staff declined: the date stays as it was; the note is shown to the school. */
+    public void declineRequestedDateChange(String note) {
+        clearPendingDateChange();
+        this.dateChangeNote = note;
+    }
+
+    /** Drops a waiting request without leaving a note (the tour was decided another way). */
+    public void clearPendingDateChange() {
+        this.requestedVisitDate = null;
+        this.requestedArrivalTime = null;
+        this.requestedDepartureTime = null;
+        this.updatedAt = Instant.now();
+    }
+
+    public LocalDate getRequestedVisitDate() { return requestedVisitDate; }
+    public LocalTime getRequestedArrivalTime() { return requestedArrivalTime; }
+    public LocalTime getRequestedDepartureTime() { return requestedDepartureTime; }
+    public String getDateChangeNote() { return dateChangeNote; }
 
     public int getVersion() {
         return version;

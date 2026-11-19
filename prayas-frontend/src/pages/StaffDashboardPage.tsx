@@ -1,15 +1,18 @@
 import { Fragment, useEffect, useMemo, useState } from 'react';
+import { Navigate } from 'react-router-dom';
 import {
   fetchTourRequests,
   submitDecision,
   regenerateTrackingLink,
   fetchProgrammeDetail,
   reopenRequest,
+  resolveDateChange,
 } from '../api/staffApi';
 import { extractErrorMessage } from '../api/errors';
 import type { Me, ProgrammeSummary, ProgrammeStatus, ProgrammeDetail } from '../api/types';
 import { formatDateDMY, DateInput } from '../components/DateInput';
-import { StaffLayout, StaffNotice } from '../components/staff/StaffLayout';
+import { AssignmentPanel } from '../components/staff/AssignmentPanel';
+import { StaffLayout } from '../components/staff/StaffLayout';
 import { StaffLogin } from '../components/staff/StaffLogin';
 import { formatTime12h } from '../components/TimeInput12h';
 import { useStaffSession } from '../hooks/useStaffSession';
@@ -48,16 +51,14 @@ export function StaffDashboardPage() {
   }
   const me = session.me;
 
+  // People who don't review requests (most volunteers) start on their own shifts instead.
+  if (!me.canViewTours) {
+    return <Navigate to="/staff/my-tours" replace />;
+  }
+
   return (
     <StaffLayout me={me} active="requests" title="DASHBOARD">
-      {me.canViewTours ? (
-        <RequestsPanel me={me} />
-      ) : (
-        <StaffNotice
-          title="No access to tour requests"
-          message="Your account isn't set up to review campus tour requests. Tasks assigned to you will appear in your own queue as those screens are added; a lead can change your roles from the Admin page."
-        />
-      )}
+      <RequestsPanel me={me} />
     </StaffLayout>
   );
 }
@@ -89,11 +90,18 @@ function RequestsPanel({ me }: { me: Me }) {
   const [copiedLinkId, setCopiedLinkId] = useState<number | null>(null);
 
   // Expandable row detail -- fetched lazily and cached per row, since the
-  // summary list deliberately doesn't carry every field.
-  const [expandedId, setExpandedId] = useState<number | null>(null);
+  // summary list deliberately doesn't carry every field. Any number of rows
+  // can be open at once; each one is closed only by clicking it again.
+  const [expandedIds, setExpandedIds] = useState<number[]>([]);
   const [detailCache, setDetailCache] = useState<Record<number, ProgrammeDetail>>({});
-  const [detailLoadingId, setDetailLoadingId] = useState<number | null>(null);
-  const [detailError, setDetailError] = useState<string | null>(null);
+  const [detailLoadingIds, setDetailLoadingIds] = useState<number[]>([]);
+  const [detailErrors, setDetailErrors] = useState<Record<number, string>>({});
+
+  // A school's request for a different date: staff answer it before anything changes.
+  const [dateChangeBusyId, setDateChangeBusyId] = useState<number | null>(null);
+  const [dateChangeError, setDateChangeError] = useState<string | null>(null);
+  const [decliningChangeId, setDecliningChangeId] = useState<number | null>(null);
+  const [declineChangeNote, setDeclineChangeNote] = useState('');
 
   const loadRequests = () => {
     setListLoading(true);
@@ -114,10 +122,25 @@ function RequestsPanel({ me }: { me: Me }) {
       await submitDecision(id, { decision, note });
       loadRequests();
     } catch (err) {
-      alert('That action failed. Please try again.');
+      alert(extractErrorMessage(err));
       console.error(err);
     } finally {
       setActingOnId(null);
+    }
+  };
+
+  const answerDateChange = async (id: number, decision: 'APPROVE' | 'DECLINE', note?: string) => {
+    setDateChangeBusyId(id);
+    setDateChangeError(null);
+    try {
+      await resolveDateChange(id, decision, note);
+      setDecliningChangeId(null);
+      setDeclineChangeNote('');
+      loadRequests();
+    } catch (err) {
+      setDateChangeError(extractErrorMessage(err));
+    } finally {
+      setDateChangeBusyId(null);
     }
   };
 
@@ -195,20 +218,26 @@ function RequestsPanel({ me }: { me: Me }) {
   };
 
   const toggleExpand = (id: number) => {
-    if (expandedId === id) {
-      setExpandedId(null);
+    if (expandedIds.includes(id)) {
+      setExpandedIds((prev) => prev.filter((x) => x !== id));
       return;
     }
-    setExpandedId(id);
+    setExpandedIds((prev) => [...prev, id]);
     if (!detailCache[id]) {
-      setDetailLoadingId(id);
-      setDetailError(null);
+      setDetailLoadingIds((prev) => [...prev, id]);
+      setDetailErrors((prev) => {
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      });
       fetchProgrammeDetail(id)
         .then((d) => setDetailCache((prev) => ({ ...prev, [id]: d })))
-        .catch(() => setDetailError("Couldn't load details for that row."))
-        .finally(() => setDetailLoadingId(null));
+        .catch(() => setDetailErrors((prev) => ({ ...prev, [id]: "Couldn't load details for that row." })))
+        .finally(() => setDetailLoadingIds((prev) => prev.filter((x) => x !== id)));
     }
   };
+
+  const pendingDateChanges = requests.filter((r) => r.requestedVisitDate);
 
   const filteredRequests = useMemo(() => {
     return requests.filter((r) => {
@@ -220,6 +249,83 @@ function RequestsPanel({ me }: { me: Me }) {
 
   return (
       <div className="dashboard-table-wrap">
+      {pendingDateChanges.length > 0 && (
+        <div className="date-change-banner" role="alert">
+          <strong>
+            {pendingDateChanges.length === 1
+              ? '1 school has asked for a different visit date'
+              : `${pendingDateChanges.length} schools have asked for a different visit date`}
+          </strong>
+          <p className="date-change-hint">
+            The date does not change until you approve it.
+          </p>
+          {dateChangeError && <p className="field-error">{dateChangeError}</p>}
+          <ul>
+            {pendingDateChanges.map((r) => (
+              <li key={r.id}>
+                <div className="date-change-line">
+                  <span>
+                    #{r.id} {r.institutionName}: {formatDateDMY(r.visitDate)}{' '}
+                    <span aria-hidden="true">→</span> <strong>{formatDateDMY(r.requestedVisitDate as string)}</strong>
+                    {r.requestedArrivalTime && r.requestedDepartureTime
+                      ? ` (${formatTime12h(r.requestedArrivalTime)} to ${formatTime12h(r.requestedDepartureTime)})`
+                      : ''}
+                  </span>
+                  {me.canDecide && decliningChangeId !== r.id && (
+                    <span className="row-actions">
+                      <button
+                        className="btn btn-primary"
+                        disabled={dateChangeBusyId === r.id}
+                        onClick={() => answerDateChange(r.id, 'APPROVE')}
+                      >
+                        Approve change
+                      </button>
+                      <button
+                        className="btn btn-secondary"
+                        disabled={dateChangeBusyId === r.id}
+                        onClick={() => {
+                          setDecliningChangeId(r.id);
+                          setDeclineChangeNote('');
+                        }}
+                      >
+                        Decline
+                      </button>
+                    </span>
+                  )}
+                </div>
+                {r.status === 'APPROVED' && (
+                  <p className="date-change-warning">
+                    This tour is already approved. Approving the change moves it to the new date, frees the old
+                    date, and removes the people assigned to it, so they will need assigning again.
+                  </p>
+                )}
+                {me.canDecide && decliningChangeId === r.id && (
+                  <div className="date-change-decline">
+                    <input
+                      type="text"
+                      value={declineChangeNote}
+                      onChange={(e) => setDeclineChangeNote(e.target.value)}
+                      placeholder="Reason shown to the school (optional)"
+                      maxLength={500}
+                    />
+                    <button
+                      className="btn btn-primary"
+                      disabled={dateChangeBusyId === r.id}
+                      onClick={() => answerDateChange(r.id, 'DECLINE', declineChangeNote)}
+                    >
+                      Confirm decline
+                    </button>
+                    <button className="btn btn-secondary" onClick={() => setDecliningChangeId(null)}>
+                      Cancel
+                    </button>
+                  </div>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       <div className="dashboard-filters">
         <div className="field" style={{ marginBottom: 0 }}>
           <label htmlFor="filterStatus">Status</label>
@@ -295,13 +401,18 @@ function RequestsPanel({ me }: { me: Me }) {
                 <tr
                   className="clickable-row"
                   onClick={() => toggleExpand(r.id)}
-                  aria-expanded={expandedId === r.id}
+                  aria-expanded={expandedIds.includes(r.id)}
                 >
                 <td>{r.id}</td>
                 <td>{r.institutionName}</td>
                 <td>{[r.villageOrTown, r.district].filter(Boolean).join(', ') || '—'}</td>
                 <td>{r.institutionType === 'COLLEGE' ? 'College' : 'School'}</td>
-                <td>{formatDateDMY(r.visitDate)}</td>
+                <td>
+                  {formatDateDMY(r.visitDate)}
+                  {r.requestedVisitDate && (
+                    <div className="date-change-flag">→ {formatDateDMY(r.requestedVisitDate)} requested</div>
+                  )}
+                </td>
                 <td>{formatTime12h(r.arrivalTime) || '—'}</td>
                 <td>{formatTime12h(r.departureTime) || '—'}</td>
                 <td>{r.studentCount}</td>
@@ -373,7 +484,8 @@ function RequestsPanel({ me }: { me: Me }) {
                     <div className="row-actions">
                       <button
                         className="btn btn-primary"
-                        disabled={actingOnId === r.id}
+                        disabled={actingOnId === r.id || !!r.requestedVisitDate}
+                        title={r.requestedVisitDate ? 'Answer the school’s date change request first' : undefined}
                         onClick={() => act(r.id, 'APPROVE')}
                       >
                         Approve
@@ -408,11 +520,13 @@ function RequestsPanel({ me }: { me: Me }) {
                 </tr>
                 <tr className="detail-row-wrap">
                   <td colSpan={12} style={{ padding: 0, border: 'none' }}>
-                    <div className={`row-detail ${expandedId === r.id ? 'open' : ''}`}>
+                    <div className={`row-detail ${expandedIds.includes(r.id) ? 'open' : ''}`}>
                       <div className="row-detail-inner">
-                        {detailLoadingId === r.id && <p>Loading details…</p>}
-                        {detailError && expandedId === r.id && <p className="field-error">{detailError}</p>}
-                        {detailCache[r.id] && expandedId === r.id && (
+                        {detailLoadingIds.includes(r.id) && <p>Loading details…</p>}
+                        {detailErrors[r.id] && expandedIds.includes(r.id) && (
+                          <p className="field-error">{detailErrors[r.id]}</p>
+                        )}
+                        {detailCache[r.id] && expandedIds.includes(r.id) && (
                           <div className="row-detail-grid">
                             <div className="review-row">
                               <span className="k">Address</span>
@@ -459,6 +573,14 @@ function RequestsPanel({ me }: { me: Me }) {
                               </div>
                             )}
                           </div>
+                        )}
+                        {expandedIds.includes(r.id) && r.status === 'APPROVED' && me.canAssign && (
+                          <AssignmentPanel
+                            key={`${r.id}-${r.visitDate}`}
+                            programmeId={r.id}
+                            arrivalTime={r.arrivalTime}
+                            departureTime={r.departureTime}
+                          />
                         )}
                       </div>
                     </div>

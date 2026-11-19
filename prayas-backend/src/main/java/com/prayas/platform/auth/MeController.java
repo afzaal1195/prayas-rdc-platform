@@ -43,6 +43,7 @@ public class MeController {
                 access.canViewTourRequests(),
                 access.canDecideTours(),
                 access.canReopenTours(),
+                access.canAssign(),
                 access.canAdmin(),
                 devTools,
                 actingAs);

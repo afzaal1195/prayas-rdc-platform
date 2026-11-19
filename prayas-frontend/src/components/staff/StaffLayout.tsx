@@ -21,7 +21,7 @@ export function describeRoles(me: Me): string {
 
 interface Props {
   me: Me;
-  active: 'requests' | 'admin';
+  active: 'requests' | 'my-tours' | 'admin';
   title: string;
   children: ReactNode;
 }
@@ -54,8 +54,13 @@ export function StaffLayout({ me, active, title, children }: Props) {
 
       <div className="dashboard-toolbar">
         <nav className="staff-nav" aria-label="Staff sections">
-          <Link to="/staff" className={active === 'requests' ? 'active' : ''}>
-            Tour requests
+          {me.canViewTours && (
+            <Link to="/staff" className={active === 'requests' ? 'active' : ''}>
+              Tour requests
+            </Link>
+          )}
+          <Link to="/staff/my-tours" className={active === 'my-tours' ? 'active' : ''}>
+            My tours
           </Link>
           {me.canAdmin && (
             <Link to="/staff/admin" className={active === 'admin' ? 'active' : ''}>

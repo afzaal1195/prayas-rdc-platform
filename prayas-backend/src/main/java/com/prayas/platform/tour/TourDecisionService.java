@@ -94,7 +94,10 @@ public class TourDecisionService {
                 programme.getStatus(),
                 studentCount,
                 details != null ? details.getContactName() : null,
-                details != null ? details.getContactPhone() : null
+                details != null ? details.getContactPhone() : null,
+                programme.getRequestedVisitDate(),
+                programme.getRequestedArrivalTime(),
+                programme.getRequestedDepartureTime()
         );
     }
 
@@ -184,7 +187,71 @@ public class TourDecisionService {
         return programme;
     }
 
+    /**
+     * Staff answering a school's request for a different date. Approving is
+     * the moment the tour's date and times actually change; declining leaves
+     * them alone and keeps an optional note for the school.
+     */
+    @Transactional
+    public Programme resolveDateChange(Long programmeId, DateChangeDecisionRequest request, AppUser actor) {
+        Programme programme = programmeRepository.findById(programmeId)
+                .orElseThrow(() -> new NoSuchElementException("Programme " + programmeId + " not found"));
+        if (!programme.hasPendingDateChange()) {
+            throw new IllegalStateException("There is no date change waiting for a decision on this request.");
+        }
+        boolean tourAlreadyApproved = programme.getStatus() == ProgrammeStatus.APPROVED;
+        if (programme.getStatus() != ProgrammeStatus.SUBMITTED
+                && programme.getStatus() != ProgrammeStatus.UNDER_REVIEW
+                && !tourAlreadyApproved) {
+            throw new IllegalStateException("A date change can only be answered while the tour is waiting for a decision or approved.");
+        }
+
+        LocalDate oldDate = programme.getVisitDate();
+        LocalDate requestedDate = programme.getRequestedVisitDate();
+        String note = request.note() == null || request.note().isBlank() ? null : request.note().trim();
+
+        if (request.decision() == DateChangeDecisionRequest.Decision.APPROVE) {
+            if (requestedDate.isBefore(LocalDate.now())) {
+                throw new IllegalStateException(
+                        "The date the school asked for has already passed. Decline it and ask them to pick a new one.");
+            }
+            if (tourAlreadyApproved) {
+                // Moving an approved tour takes a slot on the new date, so the same
+                // daily cap and the same per-date lock as a normal approval apply.
+                advisoryLockDao.lockDate(requestedDate);
+                if (programmeRepository.countApprovedOnDate(requestedDate) >= props.getMaxPerDay()) {
+                    throw new DailyCapExceededException(
+                            "Daily cap of %d tours reached for %s. Decline this change, or ask the school to pick another date."
+                                    .formatted(props.getMaxPerDay(), requestedDate));
+                }
+            }
+            programme.applyRequestedDateChange();
+            if (tourAlreadyApproved) {
+                // Everything planned around the old date has to be looked at again.
+                LocalDate newDueDate = requestedDate.minusDays(props.getRequirementLeadDays());
+                for (Requirement requirement : requirementRepository.findByProgrammeId(programmeId)) {
+                    requirement.rescheduleTo(newDueDate);
+                }
+                events.publishEvent(new TourDateChangedEvent(programmeId, actor.getId()));
+            }
+            auditLogRepository.save(AuditLog.byUser(actor.getId(), "TOUR_DATE_CHANGE_APPROVED", "Programme",
+                    programme.getId(), Map.of("from", oldDate.toString(), "to", requestedDate.toString())));
+        } else {
+            programme.declineRequestedDateChange(note);
+            auditLogRepository.save(AuditLog.byUser(actor.getId(), "TOUR_DATE_CHANGE_DECLINED", "Programme",
+                    programme.getId(), Map.of("requested", requestedDate.toString(),
+                            "note", Optional.ofNullable(note).orElse(""))));
+        }
+        return programme;
+    }
+
     private Programme approve(Programme programme, DecisionRequest request, AppUser actor) {
+        // The date the school asked for hasn't been answered, so approving now would
+        // approve a date that might be about to change.
+        if (programme.hasPendingDateChange()) {
+            throw new IllegalStateException(
+                    "This school has asked for a different date. Approve or decline that change first, then approve the tour.");
+        }
         // Step 1: serialize with any other decision on the same date before
         // we count how many tours are already approved for it.
         advisoryLockDao.lockDate(programme.getVisitDate());
@@ -248,6 +315,7 @@ public class TourDecisionService {
     }
 
     private Programme reject(Programme programme, DecisionRequest request, AppUser actor) {
+        programme.clearPendingDateChange();
         programme.transitionTo(ProgrammeStatus.REJECTED);
         programme.setDecidedBy(actor);
         programme.setDecidedAt(Instant.now());
@@ -262,6 +330,7 @@ public class TourDecisionService {
         if (request.proposedDate() == null) {
             throw new IllegalArgumentException("proposedDate is required for PROPOSE_DATE");
         }
+        programme.clearPendingDateChange();   // staff are proposing their own date instead
         programme.transitionTo(ProgrammeStatus.RESCHEDULE_PROPOSED);
         programme.setProposedDate(request.proposedDate());
         programme.setDecisionNote(request.note());

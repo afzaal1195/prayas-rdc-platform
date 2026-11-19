@@ -46,6 +46,15 @@ public class TourRequestController {
             @Size(max = 500, message = "That reason is too long.") String reason) {
     }
 
+    // Answering a school's request for a different date: same people who may decide the tour itself.
+    @PostMapping("/{id}/date-change")
+    @PreAuthorize("@access.canDecide(#id)")
+    public ProgrammeView resolveDateChange(@PathVariable Long id,
+                                           @Valid @RequestBody DateChangeDecisionRequest request,
+                                           @CurrentUser AppUser actor) {
+        return ProgrammeView.from(decisionService.resolveDateChange(id, request, actor));
+    }
+
     // Only a Lead / Faculty In-charge may take a rejection back (AccessService.canReopenTours).
     @PostMapping("/{id}/reopen")
     @PreAuthorize("@access.canReopenTours()")

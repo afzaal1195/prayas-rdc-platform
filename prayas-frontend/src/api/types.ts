@@ -94,6 +94,12 @@ export interface TourStatusView {
   grades: GradeCount[];
   courses: CourseCount[];
   decisionNote: string | null;
+  // A date change the school asked for that staff haven't answered yet.
+  pendingVisitDate: string | null;
+  pendingArrivalTime: string | null;
+  pendingDepartureTime: string | null;
+  // Why staff declined the school's last date-change request.
+  dateChangeNote: string | null;
 }
 
 export type GlobalRole = 'FACULTY_INCHARGE' | 'LEAD' | 'MEMBER';
@@ -119,6 +125,7 @@ export interface Me {
   canViewTours: boolean;
   canDecide: boolean;
   canReopen: boolean;
+  canAssign: boolean;
   canAdmin: boolean;
   // Local profile only: the "Test as" switch.
   devTools: boolean;
@@ -138,6 +145,10 @@ export interface ProgrammeSummary {
   studentCount: number;
   contactName: string | null;
   contactPhone: string | null;
+  // Set while the school's request for a different date is waiting for staff.
+  requestedVisitDate: string | null;
+  requestedArrivalTime: string | null;
+  requestedDepartureTime: string | null;
 }
 
 export type Decision = 'APPROVE' | 'REJECT' | 'PROPOSE_DATE';
@@ -161,6 +172,42 @@ export interface ProgrammeDetail {
   interestNotes: string | null;
   decisionNote: string | null;
 }
+// ---------- Assigning people to an approved tour ----------
+
+export type AssignmentRole = 'COORDINATOR' | 'VOLUNTEER';
+
+/** One person covering one stretch of a tour. startsAt / endsAt are ISO instants (UTC). */
+export interface AssignmentView {
+  id: number;
+  userId: number;
+  userName: string;
+  role: AssignmentRole;
+  startsAt: string;
+  endsAt: string;
+  status: 'ACTIVE' | 'RELEASED';
+}
+
+/** One of the signed-in person's own shifts. */
+export interface MyAssignment {
+  assignmentId: number;
+  programmeId: number;
+  role: AssignmentRole;
+  startsAt: string;
+  endsAt: string;
+  visitDate: string;
+  institutionName: string;
+  villageOrTown: string | null;
+  district: string | null;
+  studentCount: number;
+  contactName: string | null;
+  contactPhone: string | null;
+}
+
+export interface AssigneeOption {
+  userId: number;
+  fullName: string;
+}
+
 // ---------- Admin ----------
 
 export interface DomainRef {

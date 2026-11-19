@@ -16,6 +16,10 @@ public record ProgrammeSummaryView(
         ProgrammeStatus status,
         int studentCount,
         String contactName,
-        String contactPhone
+        String contactPhone,
+        // Set while the school's request for a different date is waiting for staff.
+        LocalDate requestedVisitDate,
+        LocalTime requestedArrivalTime,
+        LocalTime requestedDepartureTime
 ) {
 }

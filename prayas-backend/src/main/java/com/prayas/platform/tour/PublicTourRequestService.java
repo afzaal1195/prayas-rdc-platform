@@ -421,8 +421,10 @@ public class PublicTourRequestService {
 
     /**
      * The school asking to push their own request to a later date (and
-     * optionally new arrival/departure times), only while it's still
-     * awaiting a decision -- distinct from staff proposing a date
+     * optionally new arrival/departure times), while it's awaiting a decision
+     * or after it has been approved. The request is only RECORDED here; the real date
+     * changes when staff approve it (TourDecisionService.resolveDateChange).
+     * Distinct from staff proposing a date
      * (RESCHEDULE_PROPOSED), which goes through the decision endpoint
      * instead. The new date must be later than the one currently on file
      * (this is about pushing a request back, not pulling it in) and still
@@ -438,9 +440,14 @@ public class PublicTourRequestService {
         Programme programme = details.getProgramme();
 
         if (programme.getStatus() != ProgrammeStatus.SUBMITTED
-                && programme.getStatus() != ProgrammeStatus.UNDER_REVIEW) {
+                && programme.getStatus() != ProgrammeStatus.UNDER_REVIEW
+                && programme.getStatus() != ProgrammeStatus.APPROVED) {
             throw new AccessDeniedException(
-                    "You can only request a different date before a decision has been made");
+                    "You can only request a different date while the request is waiting for a decision or approved");
+        }
+        if (programme.getStatus() == ProgrammeStatus.APPROVED && !programme.getVisitDate().isAfter(LocalDate.now())) {
+            throw new IllegalStateException(
+                    "The visit date has arrived or passed, so it can no longer be changed here. Please contact PRAYAS.");
         }
         if (!newVisitDate.isAfter(programme.getVisitDate())) {
             throw new IllegalArgumentException(
@@ -453,9 +460,8 @@ public class PublicTourRequestService {
         LocalTime departure = newDepartureTime != null ? newDepartureTime : programme.getDepartureTime();
         validateTimes(arrival, departure);
 
-        programme.changeVisitDate(newVisitDate);
-        programme.setArrivalTime(arrival);
-        programme.setDepartureTime(departure);
+        // Not applied yet: staff see it on their dashboard and approve or decline it.
+        programme.requestDateChange(newVisitDate, arrival, departure);
     }
 
     private TourRequestCreated fakeSuccessForBots() {

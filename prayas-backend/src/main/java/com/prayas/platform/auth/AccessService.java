@@ -91,6 +91,25 @@ public class AccessService {
                 || hasDomainRole(user, domainCode, DomainRole.COORDINATOR);
     }
 
+    /**
+     * Putting coordinators and volunteers on approved tours: Lead, Faculty
+     * In-charge, or a head/coordinator of the Volunteer Coordination Unit or
+     * Campus Tour domain.
+     */
+    public boolean canAssign() {
+        AppUser user = currentUser();
+        if (user == null) {
+            return false;
+        }
+        if (user.isLeadOrFaculty()) {
+            return true;
+        }
+        return hasDomainRole(user, "VCU", DomainRole.HEAD)
+                || hasDomainRole(user, "VCU", DomainRole.COORDINATOR)
+                || hasDomainRole(user, CAMPUS_TOUR, DomainRole.HEAD)
+                || hasDomainRole(user, CAMPUS_TOUR, DomainRole.COORDINATOR);
+    }
+
     private boolean hasDomainRole(AppUser user, String domainCode, DomainRole role) {
         return membershipRepository.existsByUserAndDomainCodeAndRole(user.getId(), domainCode, role);
     }

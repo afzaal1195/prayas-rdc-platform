@@ -19,6 +19,7 @@ public record MeView(
         boolean canViewTours,
         boolean canDecide,
         boolean canReopen,
+        boolean canAssign,
         boolean canAdmin,
         boolean devTools,
         ActingAs actingAs

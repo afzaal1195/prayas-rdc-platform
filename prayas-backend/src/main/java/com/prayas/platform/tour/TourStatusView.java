@@ -23,7 +23,13 @@ public record TourStatusView(
         // Set when staff rejected the request, or sometimes alongside an
         // approval/reschedule -- shown on the public tracking page so the
         // school knows why, e.g. "Slots full for this date".
-        String decisionNote
+        String decisionNote,
+        // A date change the school asked for that staff haven't answered yet.
+        LocalDate pendingVisitDate,
+        LocalTime pendingArrivalTime,
+        LocalTime pendingDepartureTime,
+        // Why staff declined the school's last date-change request, if they did.
+        String dateChangeNote
 ) {
     public static TourStatusView from(Programme programme, CampusTourDetails details,
                                        int currentStudentCount, Integer mealCount,
@@ -41,7 +47,11 @@ public record TourStatusView(
                 mealCount,
                 grades,
                 courses,
-                programme.getDecisionNote()
+                programme.getDecisionNote(),
+                programme.getRequestedVisitDate(),
+                programme.getRequestedArrivalTime(),
+                programme.getRequestedDepartureTime(),
+                programme.getDateChangeNote()
         );
     }
 }

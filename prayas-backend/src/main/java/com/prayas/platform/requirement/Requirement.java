@@ -70,6 +70,13 @@ public class Requirement {
         this.updatedAt = Instant.now();
     }
 
+    /** The tour moved to a new date: the due date follows, and the domain is told to re-check its work. */
+    public void rescheduleTo(LocalDate newDueDate) {
+        this.dueDate = newDueDate;
+        this.needsAttention = true;
+        this.updatedAt = Instant.now();
+    }
+
     public void updateStatus(RequirementStatus status, AppUser actor) {
         this.status = status;
         this.needsAttention = false;
