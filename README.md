@@ -185,3 +185,6 @@ These are open items to close before deployment:
 - CSRF protection is currently switched off for the API during local development and needs to be restored for the browser-based staff pages.
 - The CAPTCHA widget is not wired into the public form yet; the local profile uses a stub verifier.
 - Lead and Faculty in-charge currently have identical access.
+- Nothing marks a tour as completed yet. Shifts for tours whose date has passed show under "Finished" on My tours, and assigning people to a past tour is refused, but the request itself stays Approved.
+- Moving an approved tour to a new date releases everyone assigned to it, so the tour has to be staffed again. Shifts are not carried over to the new date.
+- A school's new date must be later than the current one and respect the minimum notice period, even for an approved tour.
