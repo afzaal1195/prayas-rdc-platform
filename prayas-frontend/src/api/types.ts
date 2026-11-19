@@ -126,6 +126,8 @@ export interface Me {
   canDecide: boolean;
   canReopen: boolean;
   canAssign: boolean;
+  canWorkApprovals: boolean;
+  canWorkTeams: boolean;
   canAdmin: boolean;
   // Local profile only: the "Test as" switch.
   devTools: boolean;
@@ -298,4 +300,78 @@ export interface DevUser {
   fullName: string;
   globalRole: GlobalRole;
   domainRoles: string[];
+}
+
+export type ApprovalKind = 'VENUE' | 'HOSTEL_OFFICE' | 'MESS';
+export type ApprovalStatus = 'WAITING' | 'PENDING' | 'REQUESTED' | 'APPROVED' | 'DENIED';
+
+export interface ApprovalContact {
+  id: number;
+  name: string;
+  office: string | null;
+  phone: string | null;
+  email: string | null;
+  officeHours: string | null;
+  preferredContact: string | null;
+}
+
+/** One permission a tour needs from outside PRAYAS (a venue's approver, or a step of the lunch chain). */
+export interface ApprovalStep {
+  id: number;
+  programmeId: number;
+  visitDate: string | null;
+  schoolName: string;
+  kind: ApprovalKind;
+  title: string;
+  detail: string | null;
+  status: ApprovalStatus;
+  note: string | null;
+  decidedByName: string | null;
+  decidedAt: string | null;
+  contact: ApprovalContact | null;
+}
+
+export type TeamRole = 'COORDINATOR' | 'VOLUNTEER';
+
+export interface TeamMember {
+  assignmentId: number;
+  userId: number;
+  name: string;
+}
+
+export interface UserOption {
+  userId: number;
+  name: string;
+}
+
+/** One domain's team on one tour, with what the signed-in person may do to it. */
+export interface DomainTeam {
+  domainId: number;
+  domainCode: string;
+  domainName: string;
+  jobs: string[];
+  coordinators: TeamMember[];
+  volunteers: TeamMember[];
+  canAssignCoordinator: boolean;
+  canAssignVolunteer: boolean;
+  coordinatorOptions: UserOption[];
+  volunteerOptions: UserOption[];
+}
+
+export interface TourTeams {
+  programmeId: number;
+  visitDate: string;
+  schoolName: string;
+  domains: DomainTeam[];
+}
+
+export interface DomainJob {
+  assignmentId: number;
+  programmeId: number;
+  visitDate: string;
+  schoolName: string;
+  domainName: string;
+  role: TeamRole;
+  jobs: string[];
+  coordinatorNames: string[];
 }

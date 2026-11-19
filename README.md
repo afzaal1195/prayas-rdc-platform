@@ -63,6 +63,8 @@ A five-step request form that needs no login:
 - Reopen a rejected request (Lead or Faculty in-charge only, reason required).
 - Date-change requests from schools appear as a banner on the request; staff approve or decline (with a reason) and nothing moves until they do.
 - Assign coordinators and volunteers to an approved tour, for the whole visit or part of it, choosing only from people who are free. Hand a shift over mid-tour to another person of the same kind.
+- An **Approvals** page for Hospitality & Logistics and the Campus Tour team: every upcoming approved tour that still needs a venue approval or the two-step lunch approval (hostel office, then mess in-charge), with who to contact and buttons to record "asked", "approved" or "denied".
+- A **Teams** page for the chain of command. For each upcoming approved tour, every domain that has a job on it (Hospitality & Logistics, Volunteer Coordination) shows its coordinators and volunteers. The faculty in-charge and leads can put anyone on any team; a domain head picks coordinators from their own domain; a coordinator picks volunteers from theirs. People see their own domain jobs on **My tours**.
 - A **My tours** page where every staff member sees their own upcoming and finished shifts, with the school, headcount and contact details.
 - Issue a fresh tracking link for a school that lost theirs.
 - Installable as an app on phone or laptop (PWA).
@@ -87,9 +89,13 @@ A five-step request form that needs no login:
 
 **Nobody can be double-booked, even by a race.** Shifts live in a `tour_assignment` table guarded by a PostgreSQL exclusion constraint (`EXCLUDE USING gist (user_id WITH =, tstzrange(starts_at, ends_at) WITH &&)`), so two people assigning the same volunteer at the same instant cannot both succeed. The service checks first to give a readable message, and turns a constraint violation into the same message. A hand-over shortens the old shift and starts the new one at exactly that moment; back-to-back shifts are allowed because the ranges are half-open. Tour times are plain campus-clock times, so shifts are anchored to `Asia/Kolkata` rather than the server's zone.
 
+**Approval chains that open and close themselves.** Approving a tour creates one approval step for each chosen venue that needs a permission, plus a two-step lunch chain. The mess step stays locked until the hostel office has approved, and closes again, losing its recorded answer, if that approval is undone. The status of the matching task (Venue approvals, Lunch) is worked out from its steps, so the task list and the detailed steps never disagree. If a tour's date moves, every answered step goes back to the start, because permission for the old date doesn't carry over. Steps are created inside the approval's own transaction through an event, so a tour is never approved without them.
+
 **Changes that need approval before they take effect.** A school's request for a new date is parked in separate `requested_*` columns, so the real date is untouched until staff approve. Approving a change on an already-approved tour takes the same per-date lock and daily-cap check as a normal approval, moves the requirement due dates, and publishes a `TourDateChangedEvent`; the assignment module listens for it and releases the shifts that were planned for the old date.
 
 **Other details.** Versioned schema migrations with Flyway, an audit log of decisions, and consistent JSON error responses.
+
+**A chain of command with the rules in one place.** Who may put whom on a domain's team for a tour is decided by one method in `DomainTeamService`, and the same method decides what the Teams page offers each person: someone who can't assign gets no buttons and no names to pick from, while the server refuses the request anyway if they try. A coordinator can only add volunteers to a tour they were themselves put on, and a head or coordinator can only choose people who belong to their own domain. A unit test covers each rule in both directions.
 
 ## Tech stack
 
@@ -176,9 +182,8 @@ mvn test
 Phase 2 continues in this order:
 
 1. **Itinerary builder.** Ordered stops for each approved tour, checked against the visit window and against other schools using the same venue at the same time.
-2. **Approval workflow engine.** Step-by-step chains such as lab permission from a department head, classroom booking, and the two-step mess lunch approval.
-3. **Task queues.** A Hospitality and Logistics queue and a "My tasks" page, with optional proof upload.
-4. **Readiness tracking.** Status on each itinerary stop, rolled up to the dashboard.
+2. **Task queues.** A Hospitality and Logistics queue and a "My tasks" page, with optional proof upload.
+3. **Readiness tracking.** Status on each itinerary stop, rolled up to the dashboard.
 
 Planned after that: photo check-ins by volunteers during a tour, and deployment.
 
@@ -189,6 +194,8 @@ These are open items to close before deployment:
 - CSRF protection is currently switched off for the API during local development and needs to be restored for the browser-based staff pages.
 - The CAPTCHA widget is not wired into the public form yet; the local profile uses a stub verifier.
 - Lead and Faculty in-charge currently have identical access.
+- Tours approved before the approval steps existed have none. Only tours approved from now on get venue and lunch steps.
+- The two lunch steps (hostel office, then mess in-charge) have no contact preset; only venue steps start with the venue's approver from the authority directory.
 - Nothing marks a tour as completed yet. Shifts for tours whose date has passed show under "Finished" on My tours, and assigning people to a past tour is refused, but the request itself stays Approved.
 - Moving an approved tour to a new date releases everyone assigned to it, so the tour has to be staffed again. Shifts are not carried over to the new date.
 - A school's new date must be later than the current one and respect the minimum notice period, even for an approved tour.

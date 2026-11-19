@@ -23,4 +23,7 @@ public interface ProgrammeRepository extends JpaRepository<Programme, Long> {
     List<Programme> findAllByOrderByIdDesc();
 
     List<Programme> findByStatusOrderByIdDesc(ProgrammeStatus status);
+
+    /** Approved tours on or after a date, soonest first. */
+    List<Programme> findByStatusAndVisitDateGreaterThanEqualOrderByVisitDateAscIdAsc(ProgrammeStatus status, LocalDate from);
 }

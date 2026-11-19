@@ -44,6 +44,8 @@ public class MeController {
                 access.canDecideTours(),
                 access.canReopenTours(),
                 access.canAssign(),
+                access.canWorkApprovals(),
+                access.canWorkTeams(),
                 access.canAdmin(),
                 devTools,
                 actingAs);

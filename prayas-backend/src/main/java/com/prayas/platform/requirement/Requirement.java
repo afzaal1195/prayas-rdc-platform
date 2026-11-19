@@ -77,6 +77,19 @@ public class Requirement {
         this.updatedAt = Instant.now();
     }
 
+    /**
+     * The status worked out from the task's approval steps. {@code acknowledged}
+     * is true when a person just acted (so the "something changed" flag clears)
+     * and false when the system is re-syncing after a change they haven't seen yet.
+     */
+    public void syncStatus(RequirementStatus status, boolean acknowledged) {
+        this.status = status;
+        if (acknowledged) {
+            this.needsAttention = false;
+        }
+        this.updatedAt = Instant.now();
+    }
+
     public void updateStatus(RequirementStatus status, AppUser actor) {
         this.status = status;
         this.needsAttention = false;

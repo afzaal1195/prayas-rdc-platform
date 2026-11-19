@@ -110,6 +110,45 @@ public class AccessService {
                 || hasDomainRole(user, CAMPUS_TOUR, DomainRole.COORDINATOR);
     }
 
+    /**
+     * Seeing and recording venue and mess approvals: Lead, Faculty In-charge,
+     * or anyone in Hospitality & Logistics (head, coordinator or volunteer --
+     * the volunteers are the ones who go and ask), or a Campus Tour head or coordinator.
+     */
+    public boolean canWorkApprovals() {
+        AppUser user = currentUser();
+        if (user == null) {
+            return false;
+        }
+        if (user.isLeadOrFaculty()) {
+            return true;
+        }
+        for (DomainRole role : DomainRole.values()) {
+            if (hasDomainRole(user, "HOSPITALITY_LOGISTICS", role)) {
+                return true;
+            }
+        }
+        return hasDomainRole(user, CAMPUS_TOUR, DomainRole.HEAD)
+                || hasDomainRole(user, CAMPUS_TOUR, DomainRole.COORDINATOR);
+    }
+
+    /**
+     * Seeing the Teams page: Lead, Faculty In-charge, or a head or coordinator
+     * of any domain. What each person can change there is decided by the
+     * chain of command in DomainTeamService.
+     */
+    public boolean canWorkTeams() {
+        AppUser user = currentUser();
+        if (user == null) {
+            return false;
+        }
+        if (user.isLeadOrFaculty()) {
+            return true;
+        }
+        return membershipRepository.findByUserId(user.getId()).stream()
+                .anyMatch(m -> m.getDomainRole() == DomainRole.HEAD || m.getDomainRole() == DomainRole.COORDINATOR);
+    }
+
     private boolean hasDomainRole(AppUser user, String domainCode, DomainRole role) {
         return membershipRepository.existsByUserAndDomainCodeAndRole(user.getId(), domainCode, role);
     }

@@ -424,3 +424,120 @@ table.request-table {
 .my-tours-past {
   opacity: 0.65;
 }
+
+/* --- Approvals page --- */
+
+.approval-tour {
+  margin-bottom: 1.5rem;
+}
+
+.approval-tour-date {
+  margin-left: 0.75rem;
+  font-family: var(--font-body, inherit);
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--ink-soft);
+}
+
+.approval-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.approval-step {
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.approval-step:last-child {
+  border-bottom: none;
+}
+
+.approval-step-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.approval-step-title {
+  font-weight: 600;
+}
+
+.approval-contact {
+  margin-top: 0.4rem;
+  font-size: 0.9rem;
+}
+
+.approval-note {
+  margin-top: 0.4rem;
+  font-size: 0.85rem;
+  font-style: italic;
+  color: var(--ink-soft);
+}
+
+.approval-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.6rem;
+  align-items: center;
+}
+
+.approval-actions input {
+  flex: 1 1 14rem;
+  min-width: 10rem;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font: inherit;
+}
+
+/* Teams page: each domain's coordinators and volunteers on a tour */
+.team-row {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin-top: 8px;
+}
+
+.team-row-label {
+  flex: 0 0 96px;
+  font-weight: 600;
+  padding-top: 4px;
+}
+
+.team-row-body {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.team-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: #eef1f7;
+}
+
+.team-chip-remove {
+  border: 0;
+  background: none;
+  cursor: pointer;
+  font-size: 1.1em;
+  line-height: 1;
+}
+
+.team-add {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+}

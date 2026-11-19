@@ -20,6 +20,8 @@ public record MeView(
         boolean canDecide,
         boolean canReopen,
         boolean canAssign,
+        boolean canWorkApprovals,
+        boolean canWorkTeams,
         boolean canAdmin,
         boolean devTools,
         ActingAs actingAs

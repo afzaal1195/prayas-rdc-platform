@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { fetchMyAssignments } from '../../api/staffApi';
+import { fetchMyAssignments, fetchMyDomainJobs } from '../../api/staffApi';
 import { extractErrorMessage } from '../../api/errors';
-import type { MyAssignment } from '../../api/types';
+import type { DomainJob, MyAssignment } from '../../api/types';
 import { campusClock } from '../../lib/campusTime';
 import { formatDateDMY } from '../DateInput';
 import { formatTime12h } from '../TimeInput12h';
@@ -49,15 +49,48 @@ function Table({ rows, past }: { rows: MyAssignment[]; past?: boolean }) {
   );
 }
 
+function DomainJobsTable({ jobs }: { jobs: DomainJob[] }) {
+  return (
+    <table className="request-table">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>School</th>
+          <th>Domain</th>
+          <th>Your role</th>
+          <th>Jobs</th>
+          <th>Coordinator</th>
+        </tr>
+      </thead>
+      <tbody>
+        {jobs.map((j) => (
+          <tr key={j.assignmentId}>
+            <td>{formatDateDMY(j.visitDate)}</td>
+            <td>{j.schoolName}</td>
+            <td>{j.domainName}</td>
+            <td>{ROLE_LABEL[j.role]}</td>
+            <td>{j.jobs.join(', ') || '—'}</td>
+            <td>{j.role === 'COORDINATOR' ? 'You' : j.coordinatorNames.join(', ') || '—'}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
+
 /** The signed-in person's own shifts: upcoming first, finished ones underneath. */
 export function MyToursPanel() {
   const [rows, setRows] = useState<MyAssignment[]>([]);
+  const [domainJobs, setDomainJobs] = useState<DomainJob[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchMyAssignments()
-      .then(setRows)
+    Promise.all([fetchMyAssignments(), fetchMyDomainJobs()])
+      .then(([assignments, jobs]) => {
+        setRows(assignments);
+        setDomainJobs(jobs);
+      })
       .catch((err) => setError(extractErrorMessage(err)))
       .finally(() => setLoading(false));
   }, []);
@@ -71,10 +104,16 @@ export function MyToursPanel() {
       {loading && <p>Loading…</p>}
       {error && <p className="field-error">{error}</p>}
 
-      {!loading && !error && rows.length === 0 && (
+      {!loading && !error && rows.length === 0 && domainJobs.length === 0 && (
         <div className="empty-state">You aren&apos;t assigned to any tours yet. They will appear here once you are.</div>
       )}
 
+      {domainJobs.length > 0 && (
+        <>
+          <h3 className="my-tours-heading">Your domain jobs</h3>
+          <DomainJobsTable jobs={domainJobs} />
+        </>
+      )}
       {upcoming.length > 0 && (
         <>
           <h3 className="my-tours-heading">Upcoming</h3>

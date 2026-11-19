@@ -9,6 +9,11 @@ import type {
   AssigneeOption,
   AssignmentRole,
   MyAssignment,
+  ApprovalStep,
+  DomainJob,
+  TeamRole,
+  TourTeams,
+  ApprovalStatus,
 } from './types';
 
 /** Returns null if not logged in (401), rather than throwing -- that's an
@@ -100,8 +105,43 @@ export async function releaseAssignment(assignmentId: number): Promise<void> {
   await apiClient.delete(`/api/v1/assignments/${assignmentId}`);
 }
 
+/** Upcoming approved tours that still have a venue or lunch permission outstanding. */
+export async function fetchApprovalQueue(): Promise<ApprovalStep[]> {
+  const { data } = await apiClient.get<ApprovalStep[]>('/api/v1/approvals');
+  return data;
+}
+
+export async function updateApproval(stepId: number, status: ApprovalStatus, note?: string): Promise<ApprovalStep> {
+  const { data } = await apiClient.patch<ApprovalStep>(`/api/v1/approvals/${stepId}`, { status, note });
+  return data;
+}
+
 export function loginUrl(): string {
   // Relative, so it goes through Vite's dev proxy (same-origin) rather than
   // a hardcoded absolute backend URL.
   return '/oauth2/authorization/google';
+}
+/** Upcoming approved tours with each domain's coordinators and volunteers. */
+export async function fetchTeams(): Promise<TourTeams[]> {
+  const { data } = await apiClient.get<TourTeams[]>('/api/v1/teams');
+  return data;
+}
+
+export async function assignTeamMember(
+  programmeId: number,
+  domainId: number,
+  userId: number,
+  role: TeamRole,
+): Promise<void> {
+  await apiClient.post(`/api/v1/tour-requests/${programmeId}/team`, { domainId, userId, role });
+}
+
+export async function removeTeamMember(assignmentId: number): Promise<void> {
+  await apiClient.delete(`/api/v1/team/${assignmentId}`);
+}
+
+/** The signed-in person's own domain jobs on upcoming tours. */
+export async function fetchMyDomainJobs(): Promise<DomainJob[]> {
+  const { data } = await apiClient.get<DomainJob[]>('/api/v1/me/domain-jobs');
+  return data;
 }

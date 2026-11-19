@@ -19,6 +19,15 @@ public interface DomainMembershipRepository extends JpaRepository<DomainMembersh
                                               @Param("domainCode") String domainCode,
                                               @Param("role") DomainRole role);
 
+    /** Active people who hold the given role in the domain, by name. */
+    @Query("""
+           select m.user from DomainMembership m
+           where m.domain.id = :domainId and m.domainRole = :role and m.user.active = true
+           order by m.user.fullName
+           """)
+    List<com.prayas.platform.user.AppUser> findUsersByDomainAndRole(@Param("domainId") Long domainId,
+                                                                    @Param("role") DomainRole role);
+
     @Query("select m from DomainMembership m join fetch m.domain where m.user.id = :userId")
     List<DomainMembership> findByUserId(@Param("userId") Long userId);
 
