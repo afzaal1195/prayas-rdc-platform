@@ -198,6 +198,9 @@ public class AssignmentService {
         if (programme.getStatus() != ProgrammeStatus.APPROVED) {
             throw new IllegalStateException("People can only be assigned to an approved tour.");
         }
+        if (programme.getVisitDate().isBefore(java.time.LocalDate.now(CAMPUS_ZONE))) {
+            throw new IllegalStateException("This tour has already taken place, so its shifts can't be changed.");
+        }
         if (programme.getArrivalTime() == null || programme.getDepartureTime() == null) {
             throw new IllegalStateException("This tour has no arrival and departure time, so shifts can't be planned.");
         }

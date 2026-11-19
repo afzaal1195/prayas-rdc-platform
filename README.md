@@ -48,7 +48,7 @@ A five-step request form that needs no login:
   - see the status of the request and any note from staff,
   - revise the headcount, grade by grade, until the freeze date,
   - change the lunch requirement,
-  - ask for a different date and time,
+  - ask for a different date and time, before or after approval (the date only changes once staff approve it),
   - cancel the request.
 
 ### For staff (Google sign-in, institute accounts only)
@@ -57,6 +57,9 @@ A five-step request form that needs no login:
 - An expandable detail view per request: address, contacts, teachers, grade breakdown, lunch, vehicle number.
 - Approve, or reject with a reason that the school sees on its tracking page.
 - Reopen a rejected request (Lead or Faculty in-charge only, reason required).
+- Date-change requests from schools appear as a banner on the request; staff approve or decline (with a reason) and nothing moves until they do.
+- Assign coordinators and volunteers to an approved tour, for the whole visit or part of it, choosing only from people who are free. Hand a shift over mid-tour to another person of the same kind.
+- A **My tours** page where every staff member sees their own upcoming and finished shifts, with the school, headcount and contact details.
 - Issue a fresh tracking link for a school that lost theirs.
 - Installable as an app on phone or laptop (PWA).
 
@@ -78,6 +81,10 @@ A five-step request form that needs no login:
 
 **Business rules enforced on both ends.** Minimum notice before a visit, permitted visiting hours, minimum visit length, and a headcount freeze before the visit date are all configurable, validated in the browser for fast feedback and again on the server.
 
+**Nobody can be double-booked, even by a race.** Shifts live in a `tour_assignment` table guarded by a PostgreSQL exclusion constraint (`EXCLUDE USING gist (user_id WITH =, tstzrange(starts_at, ends_at) WITH &&)`), so two people assigning the same volunteer at the same instant cannot both succeed. The service checks first to give a readable message, and turns a constraint violation into the same message. A hand-over shortens the old shift and starts the new one at exactly that moment; back-to-back shifts are allowed because the ranges are half-open. Tour times are plain campus-clock times, so shifts are anchored to `Asia/Kolkata` rather than the server's zone.
+
+**Changes that need approval before they take effect.** A school's request for a new date is parked in separate `requested_*` columns, so the real date is untouched until staff approve. Approving a change on an already-approved tour takes the same per-date lock and daily-cap check as a normal approval, moves the requirement due dates, and publishes a `TourDateChangedEvent`; the assignment module listens for it and releases the shifts that were planned for the old date.
+
 **Other details.** Versioned schema migrations with Flyway, an audit log of decisions, and consistent JSON error responses.
 
 ## Tech stack
@@ -88,7 +95,7 @@ A five-step request form that needs no login:
 | Database | PostgreSQL 15, Flyway |
 | Frontend | React, TypeScript, Vite, React Router, Axios |
 | App install | vite-plugin-pwa (Workbox service worker) |
-| Testing | JUnit integration and service tests against a real PostgreSQL database |
+| Testing | JUnit and Mockito unit tests for the business rules, plus integration tests against a real PostgreSQL database |
 
 ## Project structure
 
@@ -169,7 +176,7 @@ Phase 2 continues in this order:
 3. **Task queues.** A Hospitality and Logistics queue and a "My tasks" page, with optional proof upload.
 4. **Readiness tracking.** Status on each itinerary stop, rolled up to the dashboard.
 
-Planned after that: assigning coordinators and volunteers by availability, photo check-ins by volunteers during a tour, and deployment.
+Planned after that: photo check-ins by volunteers during a tour, and deployment.
 
 ## Known limitations
 

@@ -28,7 +28,7 @@ interface Props {
 
 /** The frame shared by every signed-in staff page: header, who-am-I bar, navigation. */
 export function StaffLayout({ me, active, title, children }: Props) {
-  useDocumentTitle(`${title} — PRAYAS Staff`);
+  useDocumentTitle(title);
   const showDevSwitch = me.devTools && (me.canAdmin || me.actingAs !== null);
 
   const stopTesting = async () => {

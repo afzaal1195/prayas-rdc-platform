@@ -1,5 +1,6 @@
 package com.prayas.platform.tour;
 
+import com.prayas.platform.user.AppUser;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -51,6 +52,9 @@ class TourDecisionServiceConcurrencyTest {
         LocalDate sameDate = LocalDate.now().plusDays(1000 + ThreadLocalRandom.current().nextInt(100000));
         int candidateCount = 6; // more requests than the cap, to force contention
         List<Long> programmeIds = fixtures.createSubmittedProgrammes(sameDate, candidateCount);
+        // Created once, before the race: on a fresh database several threads would otherwise
+        // all try to insert the same lead user at the same moment (unique email constraint).
+        AppUser lead = fixtures.anyLeadUser();
 
         ExecutorService pool = Executors.newFixedThreadPool(candidateCount);
         CountDownLatch startGate = new CountDownLatch(1);
@@ -64,7 +68,7 @@ class TourDecisionServiceConcurrencyTest {
                     startGate.await();
                     decisionService.decide(id,
                             new DecisionRequest(DecisionType.APPROVE, "race test", null),
-                            fixtures.anyLeadUser());
+                            lead);
                     approved.incrementAndGet();
                 } catch (DailyCapExceededException e) {
                     rejectedByCapacity.incrementAndGet();
