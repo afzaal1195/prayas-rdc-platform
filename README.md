@@ -34,6 +34,10 @@ A five-step request form that needs no login:
 
 ![Lead dashboard](docs/staff/dashboard-lead.png)
 
+**My tours**, where each coordinator or volunteer sees only their own shifts (shown here as a volunteer, using the "Test as" switcher):
+
+![My tours](docs/staff/my-tours.png)
+
 | Venues | Approval contacts | Staff and roles |
 | --- | --- | --- |
 | [![Venues](docs/staff/admin-venues.png)](docs/staff/admin-venues.png) | [![Approval contacts](docs/staff/admin-approval-contacts.png)](docs/staff/admin-approval-contacts.png) | [![Staff and roles](docs/staff/admin-staff-roles.png)](docs/staff/admin-staff-roles.png) |
