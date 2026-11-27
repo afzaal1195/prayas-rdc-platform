@@ -66,6 +66,7 @@ A five-step request form that needs no login:
 - An **Approvals** page for Hospitality & Logistics and the Campus Tour team: every upcoming approved tour that still needs a venue approval or the two-step lunch approval (hostel office, then mess in-charge), with who to contact and buttons to record "asked", "approved" or "denied".
 - A **Teams** page for the chain of command. For each upcoming approved tour, every domain that has a job on it (Hospitality & Logistics, Volunteer Coordination) shows its coordinators and volunteers. The faculty in-charge and leads can put anyone on any team; a domain head picks coordinators from their own domain; a coordinator picks volunteers from theirs. People see their own domain jobs on **My tours**.
 - A **Tasks** page showing where each domain's tasks for upcoming tours stand. The faculty in-charge and leads see every domain with totals; heads, coordinators and volunteers see their own domains, with the team on each task. Coordinators and heads can set the status of tasks that aren't worked out from approvals.
+- An **Itineraries** page where the Campus Tour team plans each approved tour as a timed list of stops (a venue, or an activity like a welcome talk or lunch). Stops must fall inside the visit window and can't overlap, and a venue can't be booked by two tours at the same time. Schools see the plan on their tracking link.
 - A **My tours** page where every staff member sees their own upcoming and finished shifts, with the school, headcount and contact details.
 - Reopen a rejected request, optionally offering the school a new date. The school sees the date on their tracking link and the request reopens only when they accept it; if they decline, it stays rejected.
 - Issue a fresh tracking link for a school that lost theirs.
@@ -183,9 +184,8 @@ mvn test
 
 Phase 2 continues in this order:
 
-1. **Itinerary builder.** Ordered stops for each approved tour, checked against the visit window and against other schools using the same venue at the same time.
-2. **Task queues.** A Hospitality and Logistics queue and a "My tasks" page, with optional proof upload.
-3. **Readiness tracking.** Status on each itinerary stop, rolled up to the dashboard.
+1. **Task queues.** A Hospitality and Logistics queue and a "My tasks" page, with optional proof upload.
+2. **Readiness tracking.** Status on each itinerary stop, rolled up to the dashboard.
 
 Planned after that: photo check-ins by volunteers during a tour, and deployment.
 

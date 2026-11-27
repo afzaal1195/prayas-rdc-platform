@@ -614,3 +614,39 @@ table.request-table {
 .proposed-date-box p {
   margin: 0 0 0.75rem;
 }
+
+/* Itineraries page: the add-a-stop form under each tour's stops */
+.itinerary-add {
+  padding: 1rem;
+  border-top: 1px solid var(--border);
+  background: #fafbfd;
+}
+
+.itinerary-times {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 1.5rem;
+}
+
+.itinerary-error {
+  padding: 0 1rem;
+}
+
+/* Tracking page: the school's own itinerary */
+.school-itinerary {
+  list-style: none;
+  margin: 0.5rem 0 0;
+  padding: 0;
+}
+
+.school-itinerary li {
+  display: flex;
+  gap: 1rem;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.school-itinerary .when {
+  flex: 0 0 11rem;
+  font-weight: 600;
+}

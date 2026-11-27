@@ -11,6 +11,7 @@ import type {
   MyAssignment,
   ApprovalStep,
   DomainJob,
+  ItineraryBoard,
   RequirementStatus,
   TaskBoard,
   TeamRole,
@@ -160,4 +161,21 @@ export async function fetchTaskBoard(): Promise<TaskBoard> {
 
 export async function setRequirementStatus(requirementId: number, status: RequirementStatus): Promise<void> {
   await apiClient.patch(`/api/v1/requirements/${requirementId}`, { status });
+}
+
+/** Every active venue plus each upcoming approved tour's stops (with any problems found). */
+export async function fetchItineraries(): Promise<ItineraryBoard> {
+  const { data } = await apiClient.get<ItineraryBoard>('/api/v1/itineraries');
+  return data;
+}
+
+export async function addItineraryStop(
+  programmeId: number,
+  stop: { venueId?: number; title?: string; startTime: string; endTime: string; notes?: string },
+): Promise<void> {
+  await apiClient.post(`/api/v1/tour-requests/${programmeId}/itinerary`, stop);
+}
+
+export async function removeItineraryStop(stopId: number): Promise<void> {
+  await apiClient.delete(`/api/v1/itinerary/${stopId}`);
 }

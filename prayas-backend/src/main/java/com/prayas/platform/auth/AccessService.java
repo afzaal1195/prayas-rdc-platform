@@ -51,6 +51,14 @@ public class AccessService {
                 || hasDomainRole(user, CAMPUS_TOUR, DomainRole.COORDINATOR);
     }
 
+    /**
+     * Planning an approved tour's itinerary: Lead, Faculty In-charge, or a Campus
+     * Tour domain head or coordinator -- the people who run the tours themselves.
+     */
+    public boolean canPlanItineraries() {
+        return canViewTourRequests();
+    }
+
     /** Approving, rejecting or rescheduling: Lead, Faculty In-charge, or the Campus Tour domain HEAD. */
     public boolean canDecideTours() {
         AppUser user = currentUser();

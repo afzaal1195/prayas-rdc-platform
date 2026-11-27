@@ -46,6 +46,7 @@ public class MeController {
                 access.canAssign(),
                 access.canWorkApprovals(),
                 access.canWorkTeams(),
+                access.canPlanItineraries(),
                 access.canAdmin(),
                 devTools,
                 actingAs);

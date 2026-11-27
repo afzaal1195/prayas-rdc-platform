@@ -6,12 +6,14 @@ import {
   cancelTourRequest,
   requestDateChange,
   acceptProposedDate,
+  fetchPublicItinerary,
   declineProposedDate,
 } from '../api/tourApi';
 import { extractErrorMessage } from '../api/errors';
+import { StaffHeader } from '../components/staff/StaffHeader';
 import { TimeInput12h, formatTime12h } from '../components/TimeInput12h';
 import { DateInput, formatDateDMY } from '../components/DateInput';
-import type { TourStatusView } from '../api/types';
+import type { PublicStop, TourStatusView } from '../api/types';
 import type { GradeRow, CourseRow } from './formState';
 import '../styles/form.css';
 import '../styles/dashboard.css';
@@ -71,6 +73,7 @@ export function TourStatusPage() {
   const [confirmingCancel, setConfirmingCancel] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
 
+  const [itinerary, setItinerary] = useState<PublicStop[]>([]);
   const [answering, setAnswering] = useState(false);
   const [answerError, setAnswerError] = useState<string | null>(null);
   const [decliningDate, setDecliningDate] = useState(false);
@@ -90,6 +93,14 @@ export function TourStatusPage() {
     fetchTourStatus(token)
       .then((s) => {
         setStatus(s);
+        // The plan for the day is only shown once the tour is approved; a failure here shouldn't hide the page.
+        if (s.status === 'APPROVED') {
+          fetchPublicItinerary(token)
+            .then(setItinerary)
+            .catch(() => setItinerary([]));
+        } else {
+          setItinerary([]);
+        }
         setTeacherCount('');
         setLunchRequired(s.lunchRequired);
         setMealCount(s.mealCount ? String(s.mealCount) : '');
@@ -242,17 +253,8 @@ export function TourStatusPage() {
   const canCancel = status != null && !['REJECTED', 'CANCELLED', 'COMPLETED'].includes(status.status);
 
   return (
-    <div className="page">
-      <header className="page-header">
-        <div className="page-header-logos">
-          <img src="/prayas-logo-header.png" alt="PRAYAS" className="logo-prayas" />
-          <span className="logo-divider" aria-hidden="true" />
-          <img src="/rdc-logo.png" alt="Rural Development Center" className="logo-rdc" />
-          <span className="logo-divider" aria-hidden="true" />
-          <img src="/iith-logo.png" alt="Indian Institute of Technology Hyderabad" className="logo-iith" />
-        </div>
-        <h1>Your tour request</h1>
-      </header>
+    <div className="page page-staff">
+      <StaffHeader title="Your tour request" />
 
       <div className="dashboard-table-wrap" style={{ maxWidth: 560, paddingTop: '2.5rem' }}>
         {loading && <p>Loading…</p>}
@@ -389,6 +391,25 @@ export function TourStatusPage() {
                   </span>
                 </div>
               </div>
+
+              {itinerary.length > 0 && (
+                <>
+                  <h2 style={{ marginTop: '1.5rem' }}>Plan for the day</h2>
+                  <ul className="school-itinerary">
+                    {itinerary.map((stop, i) => (
+                      <li key={i}>
+                        <span className="when">
+                          {formatTime12h(stop.startTime.slice(0, 5))} – {formatTime12h(stop.endTime.slice(0, 5))}
+                        </span>
+                        <span>
+                          {stop.title}
+                          {stop.venueName && stop.venueName !== stop.title ? ` (${stop.venueName})` : ''}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              )}
 
               {canEdit && (
                 <>

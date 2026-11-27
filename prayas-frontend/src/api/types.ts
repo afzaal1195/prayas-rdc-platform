@@ -128,6 +128,7 @@ export interface Me {
   canAssign: boolean;
   canWorkApprovals: boolean;
   canWorkTeams: boolean;
+  canPlanItineraries: boolean;
   canAdmin: boolean;
   // Local profile only: the "Test as" switch.
   devTools: boolean;
@@ -418,4 +419,42 @@ export interface TaskBoard {
   overview: boolean;
   totals: TaskCounts;
   domains: DomainStatus[];
+}
+
+export interface ItineraryStop {
+  id: number;
+  venueId: number | null;
+  venueName: string | null;
+  title: string;
+  startTime: string;
+  endTime: string;
+  notes: string | null;
+  problems: string[];
+}
+
+export interface TourItinerary {
+  programmeId: number;
+  schoolName: string;
+  visitDate: string;
+  windowStart: string;
+  windowEnd: string;
+  stops: ItineraryStop[];
+}
+
+export interface VenueOption {
+  id: number;
+  name: string;
+}
+
+export interface ItineraryBoard {
+  venues: VenueOption[];
+  tours: TourItinerary[];
+}
+
+/** What a school sees of its own itinerary. */
+export interface PublicStop {
+  title: string;
+  venueName: string | null;
+  startTime: string;
+  endTime: string;
 }

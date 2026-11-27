@@ -1,5 +1,5 @@
 import { apiClient } from './client';
-import type { TourRequestCreate, TourRequestCreated, TourStatusView, Venue, GradeCount, CourseCount } from './types';
+import type { PublicStop, TourRequestCreate, TourRequestCreated, TourStatusView, Venue, GradeCount, CourseCount } from './types';
 
 export async function fetchVenues(): Promise<Venue[]> {
   const { data } = await apiClient.get<Venue[]>('/api/v1/public/venues');
@@ -57,4 +57,11 @@ export async function acceptProposedDate(token: string): Promise<void> {
 
 export async function declineProposedDate(token: string, reason?: string): Promise<void> {
   await apiClient.post(`/api/v1/public/tour-requests/${token}/proposed-date/decline`, { reason });
+}
+
+
+/** The school's itinerary for an approved tour (empty until staff have planned one). */
+export async function fetchPublicItinerary(token: string): Promise<PublicStop[]> {
+  const { data } = await apiClient.get<PublicStop[]>(`/api/v1/public/tour-requests/${token}/itinerary`);
+  return data;
 }

@@ -22,6 +22,7 @@ public record MeView(
         boolean canAssign,
         boolean canWorkApprovals,
         boolean canWorkTeams,
+        boolean canPlanItineraries,
         boolean canAdmin,
         boolean devTools,
         ActingAs actingAs
