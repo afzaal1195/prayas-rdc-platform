@@ -8,14 +8,23 @@ import static org.assertj.core.api.Assertions.assertThat;
 class ProgrammeStatusTest {
 
     @Test
-    void aRejectedRequestCanOnlyBeReopened() {
+    void aRejectedRequestCanOnlyBeReopenedOrOfferedANewDate() {
         assertThat(ProgrammeStatus.REJECTED.canMoveTo(ProgrammeStatus.UNDER_REVIEW)).isTrue();
+        assertThat(ProgrammeStatus.REJECTED.canMoveTo(ProgrammeStatus.RESCHEDULE_PROPOSED)).isTrue();
         // ...never straight to approved, cancelled or anything else: it has to go back through review.
         for (ProgrammeStatus other : ProgrammeStatus.values()) {
-            if (other != ProgrammeStatus.UNDER_REVIEW) {
+            if (other != ProgrammeStatus.UNDER_REVIEW && other != ProgrammeStatus.RESCHEDULE_PROPOSED) {
                 assertThat(ProgrammeStatus.REJECTED.canMoveTo(other)).isFalse();
             }
         }
+    }
+
+    @Test
+    void aProposedDateIsEitherAcceptedDeclinedOrTheRequestCancelled() {
+        assertThat(ProgrammeStatus.RESCHEDULE_PROPOSED.canMoveTo(ProgrammeStatus.UNDER_REVIEW)).isTrue();
+        assertThat(ProgrammeStatus.RESCHEDULE_PROPOSED.canMoveTo(ProgrammeStatus.REJECTED)).isTrue();
+        assertThat(ProgrammeStatus.RESCHEDULE_PROPOSED.canMoveTo(ProgrammeStatus.CANCELLED)).isTrue();
+        assertThat(ProgrammeStatus.RESCHEDULE_PROPOSED.canMoveTo(ProgrammeStatus.APPROVED)).isFalse();
     }
 
     @Test

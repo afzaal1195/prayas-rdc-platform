@@ -8,6 +8,7 @@ import jakarta.validation.constraints.Size;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
@@ -43,7 +44,9 @@ public class TourRequestController {
 
     public record ReopenRequest(
             @NotBlank(message = "Please say why this request is being reopened.")
-            @Size(max = 500, message = "That reason is too long.") String reason) {
+            @Size(max = 500, message = "That reason is too long.") String reason,
+            // Optional: offer the school a new date. The request then waits for the school to accept it.
+            LocalDate proposedDate) {
     }
 
     // Answering a school's request for a different date: same people who may decide the tour itself.
@@ -61,7 +64,7 @@ public class TourRequestController {
     public ProgrammeView reopen(@PathVariable Long id,
                                 @Valid @RequestBody ReopenRequest request,
                                 @CurrentUser AppUser actor) {
-        return ProgrammeView.from(decisionService.reopen(id, request.reason().trim(), actor));
+        return ProgrammeView.from(decisionService.reopen(id, request.reason().trim(), request.proposedDate(), actor));
     }
 
     @GetMapping("/{id}/detail")

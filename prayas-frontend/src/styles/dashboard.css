@@ -541,3 +541,76 @@ table.request-table {
   gap: 6px;
   align-items: center;
 }
+
+/* Tasks page: counts for a domain and the team beneath each task */
+.task-counts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin: 6px 0 12px;
+}
+
+.task-count-bad {
+  color: #b42318;
+}
+
+.task-team {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 20px;
+  margin-top: 6px;
+  font-size: 0.9em;
+}
+
+/* Tasks page: one box per school, with that school's tasks inside it */
+.school-card {
+  margin-bottom: 1.5rem;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.school-card-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem 0.75rem;
+  padding: 0.85rem 1rem;
+  background: #f5f7fb;
+  border-bottom: 1px solid var(--border);
+}
+
+.school-card-title {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.school-card-date {
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+}
+
+.school-card-head .task-counts {
+  flex-basis: 100%;
+  margin: 0.25rem 0 0;
+}
+
+.school-card-tasks {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* Tracking page: the date PRAYAS proposed, with Accept and Decline */
+.proposed-date-box {
+  margin-top: 1rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  background: #fffdf8;
+}
+
+.proposed-date-box p {
+  margin: 0 0 0.75rem;
+}

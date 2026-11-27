@@ -97,7 +97,8 @@ public class TourDecisionService {
                 details != null ? details.getContactPhone() : null,
                 programme.getRequestedVisitDate(),
                 programme.getRequestedArrivalTime(),
-                programme.getRequestedDepartureTime()
+                programme.getRequestedDepartureTime(),
+                programme.getProposedDate()
         );
     }
 
@@ -170,6 +171,18 @@ public class TourDecisionService {
      */
     @Transactional
     public Programme reopen(Long programmeId, String reason, AppUser actor) {
+        return reopen(programmeId, reason, null, actor);
+    }
+
+    /**
+     * Reopening with a new date. When {@code proposedDate} is given the request does
+     * NOT go back under review yet: it waits as RESCHEDULE_PROPOSED, the school sees
+     * the date on its tracking page, and only when the school accepts does the
+     * request reopen (see PublicTourRequestService.acceptProposedDate). In that case
+     * the reason is shown to the school as the explanation for the new date.
+     */
+    @Transactional
+    public Programme reopen(Long programmeId, String reason, LocalDate proposedDate, AppUser actor) {
         Programme programme = programmeRepository.findById(programmeId)
                 .orElseThrow(() -> new NoSuchElementException("Programme " + programmeId + " not found"));
         if (programme.getStatus() != ProgrammeStatus.REJECTED) {
@@ -177,13 +190,31 @@ public class TourDecisionService {
         }
         String previousRejectionNote = Optional.ofNullable(programme.getDecisionNote()).orElse("");
 
-        programme.transitionTo(ProgrammeStatus.UNDER_REVIEW);
         programme.setDecidedBy(null);
         programme.setDecidedAt(null);
-        programme.setDecisionNote(null);
+        if (proposedDate == null) {
+            programme.transitionTo(ProgrammeStatus.UNDER_REVIEW);
+            programme.setDecisionNote(null);
+            auditLogRepository.save(AuditLog.byUser(actor.getId(), "TOUR_REOPENED", "Programme",
+                    programme.getId(), Map.of("reason", reason, "previousRejectionNote", previousRejectionNote)));
+            return programme;
+        }
 
-        auditLogRepository.save(AuditLog.byUser(actor.getId(), "TOUR_REOPENED", "Programme",
-                programme.getId(), Map.of("reason", reason, "previousRejectionNote", previousRejectionNote)));
+        LocalDate earliest = LocalDate.now().plusDays(props.getMinAdvanceDays());
+        if (proposedDate.isBefore(earliest)) {
+            throw new IllegalArgumentException(
+                    "The proposed date must be at least %d days from today.".formatted(props.getMinAdvanceDays()));
+        }
+        if (proposedDate.equals(programme.getVisitDate())) {
+            throw new IllegalArgumentException(
+                    "That is the date already on the request. Reopen without a new date instead.");
+        }
+        programme.transitionTo(ProgrammeStatus.RESCHEDULE_PROPOSED);
+        programme.setProposedDate(proposedDate);
+        programme.setDecisionNote(reason);
+        auditLogRepository.save(AuditLog.byUser(actor.getId(), "TOUR_REOPENED_WITH_NEW_DATE", "Programme",
+                programme.getId(), Map.of("reason", reason, "previousRejectionNote", previousRejectionNote,
+                        "proposedDate", proposedDate.toString())));
         return programme;
     }
 

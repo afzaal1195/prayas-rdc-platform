@@ -4,6 +4,7 @@ import { StaffDashboardPage } from './pages/StaffDashboardPage';
 import { AdminPage } from './pages/AdminPage';
 import { MyToursPage } from './pages/MyToursPage';
 import { ApprovalsPage } from './pages/ApprovalsPage';
+import { TasksPage } from './pages/TasksPage';
 import { TeamsPage } from './pages/TeamsPage';
 import { TourStatusPage } from './pages/TourStatusPage';
 
@@ -14,6 +15,7 @@ function App() {
       <Route path="/staff" element={<StaffDashboardPage />} />
       <Route path="/staff/my-tours" element={<MyToursPage />} />
       <Route path="/staff/approvals" element={<ApprovalsPage />} />
+      <Route path="/staff/tasks" element={<TasksPage />} />
       <Route path="/staff/teams" element={<TeamsPage />} />
       <Route path="/staff/admin" element={<AdminPage />} />
       <Route path="/status/:token" element={<TourStatusPage />} />

@@ -347,3 +347,42 @@
 .header-quote + .staff-title {
   margin-top: 0.9rem;
 }
+/* --- Hover feedback in the admin screens: fields and boxes light up under the pointer --- */
+
+.editor-card .field input,
+.editor-card .field select,
+.editor-card .field textarea,
+.editor-card .check-row,
+.admin-table tbody tr,
+.editor-card {
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+}
+
+.editor-card .field input:hover:not(:disabled),
+.editor-card .field select:hover:not(:disabled),
+.editor-card .field textarea:hover:not(:disabled) {
+  border-color: var(--accent);
+  background: #fffdf8;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent);
+}
+
+.editor-card .field select:not(:disabled) {
+  cursor: pointer;
+}
+
+.editor-card .check-row {
+  padding: 0.25rem 0.4rem;
+}
+
+.editor-card .check-row:hover {
+  background: #F7EAD3;
+  border-radius: 4px;
+}
+
+.editor-card:hover {
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+}
+
+.admin-table tbody tr:hover {
+  background: #F7EAD3;
+}

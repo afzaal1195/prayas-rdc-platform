@@ -8,11 +8,14 @@ import java.util.Set;
  * scattered through services) means the whole state machine is covered
  * by one focused unit test.
  *
- * REJECTED is not quite final: a rejection can be taken back (REJECTED ->
- * UNDER_REVIEW) so the request can be decided again. That is deliberately the
- * ONLY way out of REJECTED -- a rejected request can't jump straight to
- * approved or cancelled -- and who may do it is decided elsewhere
- * (AccessService.canReopenTours), not by this rule.
+ * REJECTED is not quite final: a rejection can be taken back so the request can
+ * be decided again, either straight to UNDER_REVIEW, or to RESCHEDULE_PROPOSED
+ * when staff offer the school a new date that the school has to accept first.
+ * Those are deliberately the ONLY ways out of REJECTED -- a rejected request
+ * can't jump straight to approved or cancelled -- and who may do it is decided
+ * elsewhere (AccessService.canReopenTours), not by this rule. A proposed date
+ * the school accepts goes to UNDER_REVIEW; one the school declines goes back
+ * to REJECTED.
  */
 public enum ProgrammeStatus {
     SUBMITTED,
@@ -39,9 +42,9 @@ public enum ProgrammeStatus {
             case SUBMITTED -> next == UNDER_REVIEW || next == CANCELLED;
             case UNDER_REVIEW -> next == APPROVED || next == REJECTED
                     || next == RESCHEDULE_PROPOSED || next == CANCELLED;
-            case RESCHEDULE_PROPOSED -> next == UNDER_REVIEW || next == CANCELLED;
+            case RESCHEDULE_PROPOSED -> next == UNDER_REVIEW || next == REJECTED || next == CANCELLED;
             case APPROVED -> next == COMPLETED || next == CANCELLED;
-            case REJECTED -> next == UNDER_REVIEW;
+            case REJECTED -> next == UNDER_REVIEW || next == RESCHEDULE_PROPOSED;
             default -> false;
         };
     }

@@ -15,6 +15,10 @@ public interface RequirementRepository extends JpaRepository<Requirement, Long> 
     @Query("select r from Requirement r where r.programme.id = :programmeId")
     List<Requirement> findByProgrammeId(@Param("programmeId") Long programmeId);
 
+    /** Every task of the given tours, with its domain loaded. */
+    @Query("select r from Requirement r join fetch r.domain where r.programme.id in :programmeIds")
+    List<Requirement> findByProgrammeIds(@Param("programmeIds") java.util.Collection<Long> programmeIds);
+
     List<Requirement> findByDomainId(Long domainId);
 
     List<Requirement> findByDomainIdAndStatus(Long domainId, RequirementStatus status);

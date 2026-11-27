@@ -65,7 +65,9 @@ A five-step request form that needs no login:
 - Assign coordinators and volunteers to an approved tour, for the whole visit or part of it, choosing only from people who are free. Hand a shift over mid-tour to another person of the same kind.
 - An **Approvals** page for Hospitality & Logistics and the Campus Tour team: every upcoming approved tour that still needs a venue approval or the two-step lunch approval (hostel office, then mess in-charge), with who to contact and buttons to record "asked", "approved" or "denied".
 - A **Teams** page for the chain of command. For each upcoming approved tour, every domain that has a job on it (Hospitality & Logistics, Volunteer Coordination) shows its coordinators and volunteers. The faculty in-charge and leads can put anyone on any team; a domain head picks coordinators from their own domain; a coordinator picks volunteers from theirs. People see their own domain jobs on **My tours**.
+- A **Tasks** page showing where each domain's tasks for upcoming tours stand. The faculty in-charge and leads see every domain with totals; heads, coordinators and volunteers see their own domains, with the team on each task. Coordinators and heads can set the status of tasks that aren't worked out from approvals.
 - A **My tours** page where every staff member sees their own upcoming and finished shifts, with the school, headcount and contact details.
+- Reopen a rejected request, optionally offering the school a new date. The school sees the date on their tracking link and the request reopens only when they accept it; if they decline, it stays rejected.
 - Issue a fresh tracking link for a school that lost theirs.
 - Installable as an app on phone or laptop (PWA).
 

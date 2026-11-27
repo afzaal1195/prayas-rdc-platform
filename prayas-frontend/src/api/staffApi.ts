@@ -11,6 +11,8 @@ import type {
   MyAssignment,
   ApprovalStep,
   DomainJob,
+  RequirementStatus,
+  TaskBoard,
   TeamRole,
   TourTeams,
   ApprovalStatus,
@@ -43,9 +45,13 @@ export async function submitDecision(
   return data;
 }
 
-/** Takes a rejection back so the request can be decided again (lead / faculty only; a reason is required). */
-export async function reopenRequest(id: number, reason: string): Promise<void> {
-  await apiClient.post(`/api/v1/tour-requests/${id}/reopen`, { reason });
+/**
+ * Takes a rejection back so the request can be decided again (lead / faculty only; a reason is required).
+ * With a proposedDate the request doesn't reopen yet: the school is offered that date and the request
+ * reopens only when they accept it.
+ */
+export async function reopenRequest(id: number, reason: string, proposedDate?: string): Promise<void> {
+  await apiClient.post(`/api/v1/tour-requests/${id}/reopen`, { reason, proposedDate });
 }
 
 /** Staff answering a school's request for a different date. Only APPROVE changes the real date. */
@@ -144,4 +150,14 @@ export async function removeTeamMember(assignmentId: number): Promise<void> {
 export async function fetchMyDomainJobs(): Promise<DomainJob[]> {
   const { data } = await apiClient.get<DomainJob[]>('/api/v1/me/domain-jobs');
   return data;
+}
+
+/** Every domain's tasks for leads; the caller's own domains for everyone else. */
+export async function fetchTaskBoard(): Promise<TaskBoard> {
+  const { data } = await apiClient.get<TaskBoard>('/api/v1/task-status');
+  return data;
+}
+
+export async function setRequirementStatus(requirementId: number, status: RequirementStatus): Promise<void> {
+  await apiClient.patch(`/api/v1/requirements/${requirementId}`, { status });
 }

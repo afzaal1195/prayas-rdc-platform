@@ -464,6 +464,39 @@ public class PublicTourRequestService {
         programme.requestDateChange(newVisitDate, arrival, departure);
     }
 
+    /**
+     * The school accepting the date staff proposed. Only now does the request
+     * reopen (go back under review) with the new date. The date has to satisfy
+     * the same minimum-notice rule as a new submission, since time may have
+     * passed since staff proposed it.
+     */
+    @Transactional
+    public void acceptProposedDate(String rawToken) {
+        Programme programme = programmeFor(rawToken);
+        if (programme.getStatus() != ProgrammeStatus.RESCHEDULE_PROPOSED || programme.getProposedDate() == null) {
+            throw new IllegalStateException("There is no proposed date waiting for your answer.");
+        }
+        validateVisitDate(programme.getProposedDate());
+        programme.acceptProposedDate();
+    }
+
+    /** The school turning the proposed date down: the request goes back to rejected. */
+    @Transactional
+    public void declineProposedDate(String rawToken, String reason) {
+        Programme programme = programmeFor(rawToken);
+        String note = reason == null || reason.isBlank()
+                ? "The school did not accept the proposed date."
+                : "The school did not accept the proposed date: " + reason.trim();
+        programme.declineProposedDate(note);
+    }
+
+    private Programme programmeFor(String rawToken) {
+        return tourDetailsRepository
+                .findByTrackingTokenHash(tokenGenerator.hash(rawToken))
+                .orElseThrow(() -> new NoSuchElementException("No tour request for this link"))
+                .getProgramme();
+    }
+
     private TourRequestCreated fakeSuccessForBots() {
         return new TourRequestCreated(0L, tokenGenerator.generate().rawToken(), ProgrammeStatus.UNDER_REVIEW);
     }

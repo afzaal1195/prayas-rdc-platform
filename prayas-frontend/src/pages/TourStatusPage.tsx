@@ -1,6 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { fetchTourStatus, reviseHeadcount, cancelTourRequest, requestDateChange } from '../api/tourApi';
+import {
+  fetchTourStatus,
+  reviseHeadcount,
+  cancelTourRequest,
+  requestDateChange,
+  acceptProposedDate,
+  declineProposedDate,
+} from '../api/tourApi';
 import { extractErrorMessage } from '../api/errors';
 import { TimeInput12h, formatTime12h } from '../components/TimeInput12h';
 import { DateInput, formatDateDMY } from '../components/DateInput';
@@ -24,7 +31,7 @@ function statusMessage(status: TourStatusView['status']): string {
     case 'UNDER_REVIEW':
       return 'Your request is under review. We\u2019ll be in touch on the phone number you provided once a decision is made.';
     case 'RESCHEDULE_PROPOSED':
-      return 'We\u2019ve proposed a different date for this visit -- see below. Please contact us to confirm.';
+      return 'We\u2019ve proposed a different date for this visit. Your request reopens once you accept it -- see below.';
     case 'APPROVED':
       return 'Your campus tour is approved. See you then!';
     case 'REJECTED':
@@ -63,6 +70,11 @@ export function TourStatusPage() {
   const [cancelError, setCancelError] = useState<string | null>(null);
   const [confirmingCancel, setConfirmingCancel] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
+
+  const [answering, setAnswering] = useState(false);
+  const [answerError, setAnswerError] = useState<string | null>(null);
+  const [decliningDate, setDecliningDate] = useState(false);
+  const [declineReason, setDeclineReason] = useState('');
 
   const [newDate, setNewDate] = useState('');
   const [newArrivalTime, setNewArrivalTime] = useState('');
@@ -167,6 +179,26 @@ export function TourStatusPage() {
     }
   };
 
+  const handleAnswerProposedDate = async (accept: boolean) => {
+    if (!token) return;
+    setAnswering(true);
+    setAnswerError(null);
+    try {
+      if (accept) {
+        await acceptProposedDate(token);
+      } else {
+        await declineProposedDate(token, declineReason.trim() || undefined);
+        setDecliningDate(false);
+        setDeclineReason('');
+      }
+      load();
+    } catch (err) {
+      setAnswerError(extractErrorMessage(err));
+    } finally {
+      setAnswering(false);
+    }
+  };
+
   const handleCancel = async () => {
     if (!token) return;
     setCancelling(true);
@@ -236,6 +268,67 @@ export function TourStatusPage() {
                 <p className="field-error" style={{ marginTop: '0.5rem' }}>
                   Reason: {status.decisionNote}
                 </p>
+              )}
+
+              {status.status === 'RESCHEDULE_PROPOSED' && status.proposedDate && (
+                <div className="proposed-date-box">
+                  <p>
+                    PRAYAS has proposed <strong>{formatDateDMY(status.proposedDate)}</strong> for your visit. Your
+                    request will be reopened for review once you accept this date.
+                  </p>
+                  {answerError && <div className="submit-error">{answerError}</div>}
+                  {decliningDate ? (
+                    <>
+                      <div className="field">
+                        <label htmlFor="declineReason">Reason (optional)</label>
+                        <textarea
+                          id="declineReason"
+                          rows={2}
+                          maxLength={500}
+                          value={declineReason}
+                          onChange={(e) => setDeclineReason(e.target.value)}
+                        />
+                      </div>
+                      <div className="row-actions">
+                        <button
+                          type="button"
+                          className="btn btn-primary"
+                          disabled={answering}
+                          onClick={() => handleAnswerProposedDate(false)}
+                        >
+                          {answering ? 'Sending…' : 'Yes, decline this date'}
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-secondary"
+                          disabled={answering}
+                          onClick={() => setDecliningDate(false)}
+                        >
+                          Back
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="row-actions">
+                      <button
+                        type="button"
+                        className="btn btn-primary"
+                        disabled={answering}
+                        onClick={() => handleAnswerProposedDate(true)}
+                      >
+                        {answering ? 'Saving…' : `Accept ${formatDateDMY(status.proposedDate)}`}
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-secondary"
+                        disabled={answering}
+                        onClick={() => setDecliningDate(true)}
+                      >
+                        Decline
+                      </button>
+                    </div>
+                  )}
+                </div>
               )}
 
               {status.pendingVisitDate && (

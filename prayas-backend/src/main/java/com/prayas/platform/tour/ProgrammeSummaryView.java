@@ -20,6 +20,8 @@ public record ProgrammeSummaryView(
         // Set while the school's request for a different date is waiting for staff.
         LocalDate requestedVisitDate,
         LocalTime requestedArrivalTime,
-        LocalTime requestedDepartureTime
+        LocalTime requestedDepartureTime,
+        // Set while staff have offered a new date and the school hasn't answered yet.
+        LocalDate proposedDate
 ) {
 }

@@ -185,6 +185,34 @@ public class Programme {
         this.updatedAt = Instant.now();
     }
 
+    /**
+     * The school accepted the date staff proposed: it becomes the visit date and
+     * the request goes back under review. Only valid while a proposal is waiting.
+     */
+    public void acceptProposedDate() {
+        if (status != ProgrammeStatus.RESCHEDULE_PROPOSED || proposedDate == null) {
+            throw new IllegalStateException("There is no proposed date waiting for an answer.");
+        }
+        transitionTo(ProgrammeStatus.UNDER_REVIEW);
+        this.visitDate = proposedDate;
+        this.proposedDate = null;
+        this.decisionNote = null;
+        this.decidedBy = null;
+        this.decidedAt = null;
+        clearPendingDateChange();
+    }
+
+    /** The school turned the proposed date down: the request goes back to rejected, with their answer as the note. */
+    public void declineProposedDate(String note) {
+        if (status != ProgrammeStatus.RESCHEDULE_PROPOSED || proposedDate == null) {
+            throw new IllegalStateException("There is no proposed date waiting for an answer.");
+        }
+        transitionTo(ProgrammeStatus.REJECTED);
+        this.proposedDate = null;
+        this.decisionNote = note;
+        this.decidedAt = Instant.now();
+    }
+
     public LocalDate getRequestedVisitDate() { return requestedVisitDate; }
     public LocalTime getRequestedArrivalTime() { return requestedArrivalTime; }
     public LocalTime getRequestedDepartureTime() { return requestedDepartureTime; }

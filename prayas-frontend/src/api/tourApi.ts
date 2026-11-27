@@ -49,3 +49,12 @@ export async function requestDateChange(
     newDepartureTime,
   });
 }
+
+/** The school accepting the date PRAYAS proposed: only now does the request reopen. */
+export async function acceptProposedDate(token: string): Promise<void> {
+  await apiClient.post(`/api/v1/public/tour-requests/${token}/proposed-date/accept`);
+}
+
+export async function declineProposedDate(token: string, reason?: string): Promise<void> {
+  await apiClient.post(`/api/v1/public/tour-requests/${token}/proposed-date/decline`, { reason });
+}

@@ -21,7 +21,7 @@ export function describeRoles(me: Me): string {
 
 interface Props {
   me: Me;
-  active: 'requests' | 'my-tours' | 'approvals' | 'teams' | 'admin';
+  active: 'requests' | 'my-tours' | 'approvals' | 'teams' | 'tasks' | 'admin';
   title: string;
   children: ReactNode;
 }
@@ -62,6 +62,11 @@ export function StaffLayout({ me, active, title, children }: Props) {
           <Link to="/staff/my-tours" className={active === 'my-tours' ? 'active' : ''}>
             My tours
           </Link>
+          {(me.globalRole !== 'MEMBER' || me.domainRoles.length > 0) && (
+            <Link to="/staff/tasks" className={active === 'tasks' ? 'active' : ''}>
+              Tasks
+            </Link>
+          )}
           {me.canWorkApprovals && (
             <Link to="/staff/approvals" className={active === 'approvals' ? 'active' : ''}>
               Approvals

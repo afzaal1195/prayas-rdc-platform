@@ -149,6 +149,8 @@ export interface ProgrammeSummary {
   contactPhone: string | null;
   // Set while the school's request for a different date is waiting for staff.
   requestedVisitDate: string | null;
+  // Set while staff have offered a new date and the school hasn't answered yet.
+  proposedDate: string | null;
   requestedArrivalTime: string | null;
   requestedDepartureTime: string | null;
 }
@@ -374,4 +376,46 @@ export interface DomainJob {
   role: TeamRole;
   jobs: string[];
   coordinatorNames: string[];
+}
+
+export type RequirementKind = 'LUNCH' | 'VOLUNTEERS' | 'VENUE_APPROVALS';
+export type RequirementStatus = 'PENDING' | 'IN_PROGRESS' | 'DONE' | 'BLOCKED' | 'CANCELLED';
+
+export interface TaskRow {
+  requirementId: number;
+  programmeId: number;
+  schoolName: string;
+  visitDate: string;
+  kind: RequirementKind;
+  title: string;
+  status: RequirementStatus;
+  needsAttention: boolean;
+  dueDate: string | null;
+  progress: string | null;
+  coordinators: string[];
+  volunteers: string[];
+  canSetStatus: boolean;
+}
+
+export interface TaskCounts {
+  total: number;
+  pending: number;
+  inProgress: number;
+  done: number;
+  blocked: number;
+  needsAttention: number;
+}
+
+export interface DomainStatus {
+  domainId: number;
+  domainCode: string;
+  domainName: string;
+  counts: TaskCounts;
+  tasks: TaskRow[];
+}
+
+export interface TaskBoard {
+  overview: boolean;
+  totals: TaskCounts;
+  domains: DomainStatus[];
 }

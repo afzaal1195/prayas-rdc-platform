@@ -401,6 +401,11 @@
   color: var(--accent-dark);
   padding: 0.4rem 0;
   text-decoration: underline;
+  cursor: pointer;
+}
+
+.btn-text:hover {
+  color: var(--accent);
 }
 
 /* --- review step --- */

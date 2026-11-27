@@ -72,4 +72,19 @@ public class PublicTourRequestController {
     public void requestDateChange(@PathVariable String token, @Valid @RequestBody RescheduleRequest request) {
         service.requestDateChange(token, request.newVisitDate(), request.newArrivalTime(), request.newDepartureTime());
     }
+
+    public record DeclineProposedDateRequest(@Size(max = 500) String reason) {
+    }
+
+    // The school's answer to a date staff proposed (RESCHEDULE_PROPOSED).
+    @PostMapping("/tour-requests/{token}/proposed-date/accept")
+    public void acceptProposedDate(@PathVariable String token) {
+        service.acceptProposedDate(token);
+    }
+
+    @PostMapping("/tour-requests/{token}/proposed-date/decline")
+    public void declineProposedDate(@PathVariable String token,
+                                    @RequestBody(required = false) DeclineProposedDateRequest request) {
+        service.declineProposedDate(token, request != null ? request.reason() : null);
+    }
 }

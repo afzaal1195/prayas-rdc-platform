@@ -77,6 +77,9 @@ function RequestsPanel({ me }: { me: Me }) {
   // Reopening a rejected request also asks for a reason (it goes in the audit log).
   const [reopeningId, setReopeningId] = useState<number | null>(null);
   const [reopenNote, setReopenNote] = useState('');
+  // Optional: offer the school a new date; the request then reopens only once they accept it.
+  const [offerNewDate, setOfferNewDate] = useState(false);
+  const [reopenDate, setReopenDate] = useState('');
   const [reopenError, setReopenError] = useState<string | null>(null);
 
   // Filters -- client-side, over the already-fetched list.
@@ -153,6 +156,8 @@ function RequestsPanel({ me }: { me: Me }) {
   const cancelReopen = () => {
     setReopeningId(null);
     setReopenNote('');
+    setOfferNewDate(false);
+    setReopenDate('');
     setReopenError(null);
   };
 
@@ -160,7 +165,7 @@ function RequestsPanel({ me }: { me: Me }) {
     setActingOnId(id);
     setReopenError(null);
     try {
-      await reopenRequest(id, reopenNote.trim());
+      await reopenRequest(id, reopenNote.trim(), offerNewDate ? reopenDate : undefined);
       cancelReopen();
       loadRequests();
     } catch (err) {
@@ -409,6 +414,11 @@ function RequestsPanel({ me }: { me: Me }) {
                 <td>{r.institutionType === 'COLLEGE' ? 'College' : 'School'}</td>
                 <td>
                   {formatDateDMY(r.visitDate)}
+                  {r.status === 'RESCHEDULE_PROPOSED' && r.proposedDate && (
+                    <div className="date-change-flag">
+                      → {formatDateDMY(r.proposedDate)} offered, waiting for the school
+                    </div>
+                  )}
                   {r.requestedVisitDate && (
                     <div className="date-change-flag">→ {formatDateDMY(r.requestedVisitDate)} requested</div>
                   )}
@@ -459,17 +469,38 @@ function RequestsPanel({ me }: { me: Me }) {
                       <textarea
                         value={reopenNote}
                         onChange={(e) => setReopenNote(e.target.value)}
-                        placeholder="Why is this being reopened? (kept in the history)"
+                        placeholder={
+                          offerNewDate
+                            ? 'Why this new date? (shown to the school)'
+                            : 'Why is this being reopened? (kept in the history)'
+                        }
                         rows={2}
                       />
+                      <label className="check-row">
+                        <input
+                          type="checkbox"
+                          checked={offerNewDate}
+                          onChange={(e) => setOfferNewDate(e.target.checked)}
+                        />
+                        Ask the school to accept a new date first
+                      </label>
+                      {offerNewDate && (
+                        <div className="field" style={{ marginBottom: 0 }}>
+                          <label htmlFor={`reopen-date-${r.id}`}>Proposed date</label>
+                          <DateInput id={`reopen-date-${r.id}`} value={reopenDate} onChange={setReopenDate} />
+                          <span className="hint">
+                            The request reopens only when the school accepts this date on their tracking link.
+                          </span>
+                        </div>
+                      )}
                       {reopenError && <span className="field-error">{reopenError}</span>}
                       <div className="row-actions">
                         <button
                           className="btn btn-primary"
-                          disabled={!reopenNote.trim() || actingOnId === r.id}
+                          disabled={!reopenNote.trim() || (offerNewDate && !reopenDate) || actingOnId === r.id}
                           onClick={() => confirmReopen(r.id)}
                         >
-                          Confirm reopen
+                          {offerNewDate ? 'Send date to school' : 'Confirm reopen'}
                         </button>
                         <button className="btn btn-secondary" onClick={cancelReopen}>
                           Cancel
