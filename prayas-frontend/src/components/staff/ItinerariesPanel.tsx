@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
-import { addItineraryStop, fetchItineraries, removeItineraryStop } from '../../api/staffApi';
+import { addItineraryStop, fetchItineraries, removeItineraryStop, setStopReadiness } from '../../api/staffApi';
 import { extractErrorMessage } from '../../api/errors';
-import type { ItineraryBoard, TourItinerary, VenueOption } from '../../api/types';
+import type { ItineraryBoard, ItineraryStop, StopReadiness, TourItinerary, VenueOption } from '../../api/types';
+import { ReadinessChip } from './ReadinessChip';
 import { formatDateDMY } from '../DateInput';
 import { TimeInput12h, formatTime12h } from '../TimeInput12h';
 
@@ -99,6 +100,77 @@ function AddStopForm({ tour, venues, onAdded }: { tour: TourItinerary; venues: V
   );
 }
 
+const READINESS_LABEL: Record<StopReadiness, string> = {
+  NOT_READY: 'Not ready',
+  READY: 'Ready',
+  BLOCKED: 'Blocked',
+};
+
+/** Marks one stop ready, not ready or blocked; blocking asks what is in the way. */
+function ReadinessControl({ stop, onChanged }: { stop: ItineraryStop; onChanged: () => void }) {
+  const [blocking, setBlocking] = useState(false);
+  const [note, setNote] = useState(stop.readinessNote ?? '');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const save = async (readiness: StopReadiness, withNote?: string) => {
+    setBusy(true);
+    setError(null);
+    try {
+      await setStopReadiness(stop.id, readiness, withNote);
+      setBlocking(false);
+      onChanged();
+    } catch (err) {
+      setError(extractErrorMessage(err));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="readiness-control">
+      <select
+        value={blocking ? 'BLOCKED' : stop.readiness}
+        disabled={busy}
+        aria-label={`Readiness of ${stop.title}`}
+        onChange={(e) => {
+          const next = e.target.value as StopReadiness;
+          if (next === 'BLOCKED') {
+            setBlocking(true);
+          } else {
+            setBlocking(false);
+            save(next);
+          }
+        }}
+      >
+        {(Object.keys(READINESS_LABEL) as StopReadiness[]).map((r) => (
+          <option key={r} value={r}>
+            {READINESS_LABEL[r]}
+          </option>
+        ))}
+      </select>
+      {blocking && (
+        <span className="readiness-note">
+          <input
+            type="text"
+            maxLength={500}
+            placeholder="What is blocking this stop?"
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+          />
+          <button type="button" className="btn btn-secondary" disabled={busy || !note.trim()} onClick={() => save('BLOCKED', note)}>
+            Save
+          </button>
+          <button type="button" className="btn-text" onClick={() => setBlocking(false)}>
+            Cancel
+          </button>
+        </span>
+      )}
+      {error && <span className="field-error">{error}</span>}
+    </div>
+  );
+}
+
 function TourCard({ tour, venues, onChanged }: { tour: TourItinerary; venues: VenueOption[]; onChanged: () => void }) {
   const [error, setError] = useState<string | null>(null);
   const [removingId, setRemovingId] = useState<number | null>(null);
@@ -124,6 +196,7 @@ function TourCard({ tour, venues, onChanged }: { tour: TourItinerary; venues: Ve
         <span className="school-card-date">
           Visit runs {show(tour.windowStart)} to {show(tour.windowEnd)}
         </span>
+        <ReadinessChip summary={tour.readiness} />
       </header>
       <ul className="school-card-tasks">
         {tour.stops.length === 0 && (
@@ -148,6 +221,10 @@ function TourCard({ tour, venues, onChanged }: { tour: TourItinerary; venues: Ve
               </button>
             </div>
             {s.venueName && s.venueName !== s.title && <div className="date-change-hint">At {s.venueName}</div>}
+            <ReadinessControl stop={s} onChanged={onChanged} />
+            {s.readiness === 'BLOCKED' && s.readinessNote && (
+              <div className="field-error">Blocked: {s.readinessNote}</div>
+            )}
             {s.notes && <div className="date-change-hint">{s.notes}</div>}
             {s.problems.map((p) => (
               <div key={p} className="field-error">

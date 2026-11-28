@@ -6,12 +6,14 @@ import {
   regenerateTrackingLink,
   fetchProgrammeDetail,
   reopenRequest,
+  fetchReadiness,
   resolveDateChange,
 } from '../api/staffApi';
 import { extractErrorMessage } from '../api/errors';
-import type { Me, ProgrammeSummary, ProgrammeStatus, ProgrammeDetail } from '../api/types';
+import type { Me, ProgrammeSummary, ProgrammeStatus, ProgrammeDetail, ReadinessSummary } from '../api/types';
 import { formatDateDMY, DateInput } from '../components/DateInput';
 import { AssignmentPanel } from '../components/staff/AssignmentPanel';
+import { ReadinessChip } from '../components/staff/ReadinessChip';
 import { StaffLayout } from '../components/staff/StaffLayout';
 import { StaffLogin } from '../components/staff/StaffLogin';
 import { formatTime12h } from '../components/TimeInput12h';
@@ -106,7 +108,15 @@ function RequestsPanel({ me }: { me: Me }) {
   const [decliningChangeId, setDecliningChangeId] = useState<number | null>(null);
   const [declineChangeNote, setDeclineChangeNote] = useState('');
 
+  // How prepared each approved tour is (only for people who plan itineraries).
+  const [readiness, setReadiness] = useState<Record<number, ReadinessSummary>>({});
+
   const loadRequests = () => {
+    if (me.canPlanItineraries) {
+      fetchReadiness()
+        .then((rows) => setReadiness(Object.fromEntries(rows.map((r) => [r.programmeId, r.summary]))))
+        .catch(() => setReadiness({}));
+    }
     setListLoading(true);
     setListError(null);
     fetchTourRequests()
@@ -432,6 +442,11 @@ function RequestsPanel({ me }: { me: Me }) {
                 </td>
                 <td>
                   <span className={`status-badge ${statusClass(r.status)}`}>{r.status}</span>
+                  {r.status === 'APPROVED' && readiness[r.id] && (
+                    <div style={{ marginTop: '0.35rem' }}>
+                      <ReadinessChip summary={readiness[r.id]} />
+                    </div>
+                  )}
                 </td>
                 <td onClick={(e) => e.stopPropagation()}>
                   {rejectingId === r.id ? (

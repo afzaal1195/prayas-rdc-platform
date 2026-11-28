@@ -12,6 +12,8 @@ import com.prayas.platform.tour.TourProperties;
 import com.prayas.platform.user.AppUser;
 import com.prayas.platform.venue.Venue;
 import com.prayas.platform.venue.VenueRepository;
+import com.prayas.platform.tour.TourDateChangedEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -94,12 +96,83 @@ public class ItineraryService {
             for (ItineraryStop stop : mine) {
                 views.add(new Stop(stop.getId(), stop.getVenueId(), venueNames.get(stop.getVenueId()),
                         stop.getTitle(), stop.getStartTime(), stop.getEndTime(), stop.getNotes(),
+                        stop.getReadiness(), stop.getReadinessNote(),
                         problems(stop, mine, tour, window)));
             }
             result.add(new TourItinerary(tour.getId(), schoolName(tour.getId()), tour.getVisitDate(),
-                    window[0], window[1], views));
+                    window[0], window[1], summarise(mine), views));
         }
         return result;
+    }
+
+    /** How prepared each upcoming approved tour is, for the Tour requests dashboard. */
+    @Transactional(readOnly = true)
+    public List<TourReadiness> readiness() {
+        LocalDate today = LocalDate.now(CAMPUS_ZONE);
+        List<Programme> tours = programmes.findByStatusAndVisitDateGreaterThanEqualOrderByVisitDateAscIdAsc(
+                ProgrammeStatus.APPROVED, today);
+        if (tours.isEmpty()) {
+            return List.of();
+        }
+        Map<Long, List<ItineraryStop>> byTour = stops
+                .findByProgrammeIdInOrderByStartTimeAscIdAsc(tours.stream().map(Programme::getId).toList())
+                .stream().collect(Collectors.groupingBy(ItineraryStop::getProgrammeId));
+        return tours.stream()
+                .map(t -> new TourReadiness(t.getId(), summarise(byTour.getOrDefault(t.getId(), List.of()))))
+                .toList();
+    }
+
+    /** Blocked beats everything, then all-ready, then some-ready; a tour with no stops has nothing to be ready yet. */
+    static ReadinessSummary summarise(List<ItineraryStop> forTour) {
+        int ready = (int) forTour.stream().filter(s -> s.getReadiness() == StopReadiness.READY).count();
+        int blocked = (int) forTour.stream().filter(s -> s.getReadiness() == StopReadiness.BLOCKED).count();
+        Overall overall;
+        if (forTour.isEmpty()) {
+            overall = Overall.NO_STOPS;
+        } else if (blocked > 0) {
+            overall = Overall.BLOCKED;
+        } else if (ready == forTour.size()) {
+            overall = Overall.READY;
+        } else if (ready > 0) {
+            overall = Overall.IN_PROGRESS;
+        } else {
+            overall = Overall.NOT_READY;
+        }
+        return new ReadinessSummary(forTour.size(), ready, blocked, overall);
+    }
+
+    @Transactional
+    public void setReadiness(Long stopId, SetReadinessRequest request, AppUser actor) {
+        ItineraryStop stop = stops.findById(stopId)
+                .orElseThrow(() -> new NoSuchElementException("Stop " + stopId + " not found"));
+        Programme tour = programmes.findById(stop.getProgrammeId())
+                .orElseThrow(() -> new NoSuchElementException("Tour request " + stop.getProgrammeId() + " not found"));
+        if (tour.getVisitDate().isBefore(LocalDate.now(CAMPUS_ZONE))) {
+            throw new IllegalStateException("This tour has already taken place, so its readiness can't be changed.");
+        }
+        String note = request.note() == null || request.note().isBlank() ? null : request.note().trim();
+        if (request.readiness() == StopReadiness.BLOCKED && note == null) {
+            throw new IllegalArgumentException("Say what is blocking this stop.");
+        }
+        if (request.readiness() == StopReadiness.NOT_READY) {
+            note = null;
+        }
+        stop.markReadiness(request.readiness(), note, actor.getId());
+        auditLogs.save(AuditLog.byUser(actor.getId(), "ITINERARY_STOP_READINESS", "Programme", stop.getProgrammeId(),
+                Map.of("title", stop.getTitle(), "readiness", request.readiness().name())));
+    }
+
+    /**
+     * When a tour moves to a new date, the preparation done for the old one doesn't carry over:
+     * every stop goes back to not ready, the same way approvals are asked for again.
+     */
+    @EventListener
+    public void onTourDateChanged(TourDateChangedEvent event) {
+        for (ItineraryStop stop : stops.findByProgrammeIdOrderByStartTimeAscIdAsc(event.programmeId())) {
+            if (stop.getReadiness() != StopReadiness.NOT_READY) {
+                stop.resetReadiness();
+            }
+        }
     }
 
     /** The stops a school may see on its tracking page: only once the tour is approved. */

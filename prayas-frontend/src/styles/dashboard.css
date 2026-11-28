@@ -650,3 +650,23 @@ table.request-table {
   flex: 0 0 11rem;
   font-weight: 600;
 }
+
+/* Itineraries page: readiness picker under each stop */
+.readiness-control {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.4rem;
+}
+
+.readiness-note {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.readiness-note input {
+  min-width: 14rem;
+}

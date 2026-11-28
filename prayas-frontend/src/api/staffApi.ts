@@ -12,6 +12,8 @@ import type {
   ApprovalStep,
   DomainJob,
   ItineraryBoard,
+  StopReadiness,
+  TourReadiness,
   RequirementStatus,
   TaskBoard,
   TeamRole,
@@ -178,4 +180,15 @@ export async function addItineraryStop(
 
 export async function removeItineraryStop(stopId: number): Promise<void> {
   await apiClient.delete(`/api/v1/itinerary/${stopId}`);
+}
+
+/** Marks an itinerary stop ready, not ready, or blocked (blocked needs a note saying why). */
+export async function setStopReadiness(stopId: number, readiness: StopReadiness, note?: string): Promise<void> {
+  await apiClient.post(`/api/v1/itinerary/${stopId}/readiness`, { readiness, note });
+}
+
+/** How prepared each upcoming approved tour is, for the Tour requests dashboard. */
+export async function fetchReadiness(): Promise<TourReadiness[]> {
+  const { data } = await apiClient.get<TourReadiness[]>('/api/v1/readiness');
+  return data;
 }

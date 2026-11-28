@@ -185,7 +185,6 @@ mvn test
 Phase 2 continues in this order:
 
 1. **Task queues.** A Hospitality and Logistics queue and a "My tasks" page, with optional proof upload.
-2. **Readiness tracking.** Status on each itinerary stop, rolled up to the dashboard.
 
 Planned after that: photo check-ins by volunteers during a tour, and deployment.
 

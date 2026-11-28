@@ -35,6 +35,19 @@ public class ItineraryStop {
     @Column(name = "created_by")
     private Long createdBy;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private StopReadiness readiness = StopReadiness.NOT_READY;
+
+    @Column(name = "readiness_note", columnDefinition = "text")
+    private String readinessNote;
+
+    @Column(name = "readiness_updated_by")
+    private Long readinessUpdatedBy;
+
+    @Column(name = "readiness_updated_at")
+    private Instant readinessUpdatedAt;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
 
@@ -53,6 +66,24 @@ public class ItineraryStop {
         this.createdBy = createdBy;
     }
 
+    /** Records who set the stop's readiness and when. The note is kept only while it explains something. */
+    public void markReadiness(StopReadiness readiness, String note, Long userId) {
+        this.readiness = readiness;
+        this.readinessNote = note;
+        this.readinessUpdatedBy = userId;
+        this.readinessUpdatedAt = Instant.now();
+    }
+
+    /** Back to not ready: used when the tour moved to a new date, because the preparation was for the old one. */
+    public void resetReadiness() {
+        this.readiness = StopReadiness.NOT_READY;
+        this.readinessNote = null;
+        this.readinessUpdatedBy = null;
+        this.readinessUpdatedAt = null;
+    }
+
+    public StopReadiness getReadiness() { return readiness; }
+    public String getReadinessNote() { return readinessNote; }
     public Long getId() { return id; }
     public Long getProgrammeId() { return programmeId; }
     public Long getVenueId() { return venueId; }

@@ -18,8 +18,21 @@ public final class ItineraryViews {
             LocalTime startTime,
             LocalTime endTime,
             String notes,
+            StopReadiness readiness,
+            String readinessNote,
             /** Things wrong with this stop right now (e.g. the tour's times moved); empty when fine. */
             List<String> problems) {
+    }
+
+    /** How prepared a whole tour is, worked out from its stops. */
+    public enum Overall {
+        NO_STOPS, NOT_READY, IN_PROGRESS, READY, BLOCKED
+    }
+
+    public record ReadinessSummary(int total, int ready, int blocked, Overall overall) {
+    }
+
+    public record TourReadiness(Long programmeId, ReadinessSummary summary) {
     }
 
     public record TourItinerary(
@@ -28,6 +41,7 @@ public final class ItineraryViews {
             LocalDate visitDate,
             LocalTime windowStart,
             LocalTime windowEnd,
+            ReadinessSummary readiness,
             List<Stop> stops) {
     }
 

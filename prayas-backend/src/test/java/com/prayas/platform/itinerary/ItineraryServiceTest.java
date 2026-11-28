@@ -233,7 +233,101 @@ class ItineraryServiceTest {
         assertThat(service.forSchool(TOUR)).isEmpty();
     }
 
+    // --- readiness ------------------------------------------------------------------------------
+
+    @Test
+    void aTourRollsUpFromItsStops() {
+        assertThat(ItineraryService.summarise(List.of()).overall()).isEqualTo(ItineraryViews.Overall.NO_STOPS);
+
+        ItineraryStop a = stop(StopReadiness.NOT_READY);
+        ItineraryStop b = stop(StopReadiness.NOT_READY);
+        assertThat(ItineraryService.summarise(List.of(a, b)).overall()).isEqualTo(ItineraryViews.Overall.NOT_READY);
+
+        a.markReadiness(StopReadiness.READY, null, 1L);
+        ItineraryViews.ReadinessSummary some = ItineraryService.summarise(List.of(a, b));
+        assertThat(some.overall()).isEqualTo(ItineraryViews.Overall.IN_PROGRESS);
+        assertThat(some.ready()).isEqualTo(1);
+        assertThat(some.total()).isEqualTo(2);
+
+        b.markReadiness(StopReadiness.READY, null, 1L);
+        assertThat(ItineraryService.summarise(List.of(a, b)).overall()).isEqualTo(ItineraryViews.Overall.READY);
+
+        b.markReadiness(StopReadiness.BLOCKED, "Lab is locked", 1L);
+        ItineraryViews.ReadinessSummary blocked = ItineraryService.summarise(List.of(a, b));
+        assertThat(blocked.overall()).isEqualTo(ItineraryViews.Overall.BLOCKED);
+        assertThat(blocked.blocked()).isEqualTo(1);
+    }
+
+    @Test
+    void aStopCanBeMarkedReady() {
+        ItineraryStop stop = stop(StopReadiness.NOT_READY);
+        when(stops.findById(7L)).thenReturn(Optional.of(stop));
+
+        service.setReadiness(7L, new SetReadinessRequest(StopReadiness.READY, null), actor);
+
+        assertThat(stop.getReadiness()).isEqualTo(StopReadiness.READY);
+        verify(audit).save(any(AuditLog.class));
+    }
+
+    @Test
+    void aBlockedStopNeedsANoteSayingWhy() {
+        ItineraryStop stop = stop(StopReadiness.NOT_READY);
+        when(stops.findById(7L)).thenReturn(Optional.of(stop));
+
+        assertThatThrownBy(() -> service.setReadiness(7L, new SetReadinessRequest(StopReadiness.BLOCKED, "  "), actor))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("blocking");
+
+        service.setReadiness(7L, new SetReadinessRequest(StopReadiness.BLOCKED, "Lab is locked"), actor);
+        assertThat(stop.getReadiness()).isEqualTo(StopReadiness.BLOCKED);
+        assertThat(stop.getReadinessNote()).isEqualTo("Lab is locked");
+    }
+
+    @Test
+    void goingBackToNotReadyClearsTheNote() {
+        ItineraryStop stop = stop(StopReadiness.BLOCKED);
+        stop.markReadiness(StopReadiness.BLOCKED, "Lab is locked", 1L);
+        when(stops.findById(7L)).thenReturn(Optional.of(stop));
+
+        service.setReadiness(7L, new SetReadinessRequest(StopReadiness.NOT_READY, "old note"), actor);
+
+        assertThat(stop.getReadinessNote()).isNull();
+    }
+
+    @Test
+    void readinessOfATourThatAlreadyHappenedCannotBeChanged() {
+        ItineraryStop stop = stop(StopReadiness.NOT_READY);
+        when(stops.findById(7L)).thenReturn(Optional.of(stop));
+        when(programmes.findById(TOUR)).thenReturn(Optional.of(tour(-2, "10:00", "13:00")));
+
+        assertThatThrownBy(() -> service.setReadiness(7L, new SetReadinessRequest(StopReadiness.READY, null), actor))
+                .isInstanceOf(IllegalStateException.class);
+    }
+
+    @Test
+    void movingTheTourToANewDateSendsEveryStopBackToNotReady() {
+        ItineraryStop ready = stop(StopReadiness.NOT_READY);
+        ready.markReadiness(StopReadiness.READY, null, 1L);
+        ItineraryStop blocked = stop(StopReadiness.NOT_READY);
+        blocked.markReadiness(StopReadiness.BLOCKED, "Lab is locked", 1L);
+        when(stops.findByProgrammeIdOrderByStartTimeAscIdAsc(TOUR)).thenReturn(List.of(ready, blocked));
+
+        service.onTourDateChanged(new com.prayas.platform.tour.TourDateChangedEvent(TOUR, 1L));
+
+        assertThat(ready.getReadiness()).isEqualTo(StopReadiness.NOT_READY);
+        assertThat(blocked.getReadiness()).isEqualTo(StopReadiness.NOT_READY);
+        assertThat(blocked.getReadinessNote()).isNull();
+    }
+
     // --- helpers ----------------------------------------------------------------------------------
+
+    private static ItineraryStop stop(StopReadiness readiness) {
+        ItineraryStop stop = new ItineraryStop(TOUR, null, "Stop", t("10:00"), t("10:30"), null, 1L);
+        if (readiness != StopReadiness.NOT_READY) {
+            stop.markReadiness(readiness, readiness == StopReadiness.BLOCKED ? "reason" : null, 1L);
+        }
+        return stop;
+    }
 
     private static LocalTime t(String hhmm) {
         return LocalTime.parse(hhmm);

@@ -421,8 +421,25 @@ export interface TaskBoard {
   domains: DomainStatus[];
 }
 
+export type StopReadiness = 'NOT_READY' | 'READY' | 'BLOCKED';
+export type OverallReadiness = 'NO_STOPS' | 'NOT_READY' | 'IN_PROGRESS' | 'READY' | 'BLOCKED';
+
+export interface ReadinessSummary {
+  total: number;
+  ready: number;
+  blocked: number;
+  overall: OverallReadiness;
+}
+
+export interface TourReadiness {
+  programmeId: number;
+  summary: ReadinessSummary;
+}
+
 export interface ItineraryStop {
   id: number;
+  readiness: StopReadiness;
+  readinessNote: string | null;
   venueId: number | null;
   venueName: string | null;
   title: string;
@@ -438,6 +455,7 @@ export interface TourItinerary {
   visitDate: string;
   windowStart: string;
   windowEnd: string;
+  readiness: ReadinessSummary;
   stops: ItineraryStop[];
 }
 
