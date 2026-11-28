@@ -3,6 +3,9 @@ package com.prayas.platform.taskstatus;
 import com.prayas.platform.requirement.RequirementKind;
 import com.prayas.platform.requirement.RequirementStatus;
 
+import com.prayas.platform.team.TeamRole;
+
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -10,6 +13,16 @@ import java.util.List;
 public final class TaskStatusViews {
 
     private TaskStatusViews() {
+    }
+
+    /** One person on a domain's team for a tour, and whether they have ticked off their part. */
+    public record MemberStatus(
+            String name,
+            TeamRole role,
+            boolean done,
+            Instant completedAt,
+            String note,
+            String proofUrl) {
     }
 
     /** One task a domain owes one tour. */
@@ -28,7 +41,9 @@ public final class TaskStatusViews {
             List<String> coordinators,
             List<String> volunteers,
             /** True when the signed-in person may set the status by hand (not for tasks worked out from approval steps). */
-            boolean canSetStatus) {
+            boolean canSetStatus,
+            /** Everyone on the domain's team for this tour, with whether each has finished their part. */
+            List<MemberStatus> members) {
     }
 
     /** How many of a domain's tasks are in each state. */

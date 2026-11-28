@@ -16,10 +16,14 @@ import com.prayas.platform.tour.ProgrammeRepository;
 import com.prayas.platform.tour.ProgrammeStatus;
 import com.prayas.platform.user.AppUser;
 import com.prayas.platform.user.AppUserRepository;
+import com.prayas.platform.tour.TourDateChangedEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.*;
@@ -180,7 +184,7 @@ public class DomainTeamService {
                     domain.getName(), a.getRole(), jobsByDomain(tour.getId()).entrySet().stream()
                             .filter(e -> e.getKey().getId().equals(domain.getId()))
                             .flatMap(e -> e.getValue().stream()).toList(),
-                    coordinators));
+                    coordinators, a.isDone(), a.getCompletedAt(), a.getCompletionNote(), a.getProofUrl()));
         }
         jobs.sort(Comparator.comparing(DomainJob::visitDate).thenComparing(DomainJob::domainName));
         return jobs;
@@ -236,7 +240,82 @@ public class DomainTeamService {
                 Map.of("userId", assignment.getUserId(), "domain", domain.getCode(), "role", assignment.getRole().name())));
     }
 
+    /** The person ticks off their own part of a tour, with an optional note and proof link. Doing it again updates both. */
+    @Transactional
+    public void markDone(Long assignmentId, MarkDoneRequest request, AppUser actor) {
+        DomainAssignment assignment = ownJob(assignmentId, actor);
+        String note = request.note() == null || request.note().isBlank() ? null : request.note().trim();
+        assignment.markDone(note, cleanLink(request.proofUrl()));
+        auditLogs.save(AuditLog.byUser(actor.getId(), "JOB_DONE", "Programme", assignment.getProgrammeId(),
+                Map.of("assignmentId", assignment.getId(), "hasProof", assignment.getProofUrl() != null)));
+    }
+
+    /** Takes a tick back (and the note and proof with it). */
+    @Transactional
+    public void undoDone(Long assignmentId, AppUser actor) {
+        DomainAssignment assignment = ownJob(assignmentId, actor);
+        assignment.reopen();
+        auditLogs.save(AuditLog.byUser(actor.getId(), "JOB_REOPENED", "Programme", assignment.getProgrammeId(),
+                Map.of("assignmentId", assignment.getId())));
+    }
+
+    /**
+     * The tour moved to a new date. Whatever people had finished was for the old
+     * date, so every tick goes back to "not done yet".
+     */
+    @EventListener
+    public void onTourDateChanged(TourDateChangedEvent event) {
+        int reset = 0;
+        for (DomainAssignment a : assignments.findByProgrammeIdIn(List.of(event.programmeId()))) {
+            if (a.isDone()) {
+                a.reopen();
+                reset++;
+            }
+        }
+        if (reset > 0) {
+            auditLogs.save(AuditLog.byUser(event.actorUserId(), "JOBS_RESET", "Programme",
+                    event.programmeId(), Map.of("count", reset, "reason", "visit date changed")));
+        }
+    }
+
     // --- helpers ---------------------------------------------------------------------------
+
+    /** The caller's own assignment on a tour that is still approved and hasn't happened yet. */
+    private DomainAssignment ownJob(Long assignmentId, AppUser actor) {
+        DomainAssignment assignment = assignments.findById(assignmentId)
+                .orElseThrow(() -> new NoSuchElementException("Team assignment " + assignmentId + " not found"));
+        if (!assignment.getUserId().equals(actor.getId())) {
+            throw new AccessDeniedException("This job isn't yours.");
+        }
+        Programme tour = programmes.findById(assignment.getProgrammeId())
+                .orElseThrow(() -> new NoSuchElementException("Tour request " + assignment.getProgrammeId() + " not found"));
+        if (tour.getStatus() != ProgrammeStatus.APPROVED) {
+            throw new IllegalStateException("This tour is no longer approved, so there is nothing to tick off.");
+        }
+        if (tour.getVisitDate().isBefore(LocalDate.now(CAMPUS_ZONE))) {
+            throw new IllegalStateException("This tour has already taken place.");
+        }
+        return assignment;
+    }
+
+    /** A proof link must be a normal web address; anything else (javascript:, file:, plain text) is refused. */
+    static String cleanLink(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return null;
+        }
+        String link = raw.trim();
+        try {
+            URI uri = new URI(link);
+            String scheme = uri.getScheme();
+            boolean web = scheme != null && (scheme.equalsIgnoreCase("http") || scheme.equalsIgnoreCase("https"));
+            if (web && uri.getHost() != null) {
+                return link;
+            }
+        } catch (URISyntaxException e) {
+            // falls through to the message below
+        }
+        throw new IllegalArgumentException("The proof link must be a web address starting with http:// or https://.");
+    }
 
     /** The domains that have a job on the tour, each with what the jobs are, in domain-name order. */
     private Map<Domain, List<String>> jobsByDomain(Long programmeId) {

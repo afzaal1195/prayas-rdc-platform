@@ -13,6 +13,7 @@ import com.prayas.platform.tour.CampusTourDetailsRepository;
 import com.prayas.platform.tour.Programme;
 import com.prayas.platform.tour.ProgrammeRepository;
 import com.prayas.platform.tour.ProgrammeStatus;
+import com.prayas.platform.tour.TourDateChangedEvent;
 import com.prayas.platform.user.AppUser;
 import com.prayas.platform.user.AppUserRepository;
 import com.prayas.platform.user.GlobalRole;
@@ -293,6 +294,114 @@ class DomainTeamServiceTest {
     }
 
     // --- helpers ------------------------------------------------------------------------------
+
+    // --- ticking off your own part ---------------------------------------------------
+
+    @Test
+    void aPersonCanTickOffTheirOwnPartWithANoteAndALink() {
+        DomainAssignment mine = myAssignment(volunteer);
+
+        service.markDone(50L, new MarkDoneRequest("  Lunch packets delivered  ", " https://drive.example.com/photo "), volunteer);
+
+        assertThat(mine.isDone()).isTrue();
+        assertThat(mine.getCompletionNote()).isEqualTo("Lunch packets delivered");
+        assertThat(mine.getProofUrl()).isEqualTo("https://drive.example.com/photo");
+    }
+
+    @Test
+    void theNoteAndTheLinkAreOptional() {
+        DomainAssignment mine = myAssignment(volunteer);
+
+        service.markDone(50L, new MarkDoneRequest("  ", null), volunteer);
+
+        assertThat(mine.isDone()).isTrue();
+        assertThat(mine.getCompletionNote()).isNull();
+        assertThat(mine.getProofUrl()).isNull();
+    }
+
+    @Test
+    void aProofLinkThatIsNotAWebAddressIsRefused() {
+        DomainAssignment mine = myAssignment(volunteer);
+
+        assertThatThrownBy(() -> service.markDone(50L, new MarkDoneRequest(null, "javascript:alert(1)"), volunteer))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("http://");
+        assertThatThrownBy(() -> service.markDone(50L, new MarkDoneRequest(null, "see my photo"), volunteer))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThat(mine.isDone()).isFalse();
+    }
+
+    @Test
+    void nobodyCanTickOffSomeoneElsesPart() {
+        DomainAssignment mine = myAssignment(volunteer);
+
+        assertThatThrownBy(() -> service.markDone(50L, new MarkDoneRequest(null, null), outsider))
+                .isInstanceOf(AccessDeniedException.class);
+        assertThatThrownBy(() -> service.undoDone(50L, lead))
+                .isInstanceOf(AccessDeniedException.class);
+        assertThat(mine.isDone()).isFalse();
+    }
+
+    @Test
+    void aTourThatAlreadyHappenedCannotBeTickedOff() {
+        myAssignment(volunteer);
+        when(programmes.findById(TOUR)).thenReturn(Optional.of(tour(-1)));
+
+        assertThatThrownBy(() -> service.markDone(50L, new MarkDoneRequest(null, null), volunteer))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("already taken place");
+    }
+
+    @Test
+    void takingTheTickBackClearsTheNoteAndLink() {
+        DomainAssignment mine = myAssignment(volunteer);
+        service.markDone(50L, new MarkDoneRequest("done", "https://example.com/x"), volunteer);
+
+        service.undoDone(50L, volunteer);
+
+        assertThat(mine.isDone()).isFalse();
+        assertThat(mine.getCompletionNote()).isNull();
+        assertThat(mine.getProofUrl()).isNull();
+    }
+
+    @Test
+    void aNewVisitDateClearsEveryonesTick() {
+        DomainAssignment first = new DomainAssignment(TOUR, HL_ID, 5L, TeamRole.VOLUNTEER, 1L);
+        DomainAssignment second = new DomainAssignment(TOUR, HL_ID, 4L, TeamRole.COORDINATOR, 1L);
+        first.markDone("ok", null);
+        when(assignments.findByProgrammeIdIn(List.of(TOUR))).thenReturn(List.of(first, second));
+
+        service.onTourDateChanged(new TourDateChangedEvent(TOUR, 1L));
+
+        assertThat(first.isDone()).isFalse();
+        assertThat(first.getCompletionNote()).isNull();
+        assertThat(second.isDone()).isFalse();
+    }
+
+    @Test
+    void myJobsShowWhetherEachPartIsDone() {
+        DomainAssignment mine = myAssignment(volunteer);
+        ReflectionTestUtils.setField(mine, "userId", 5L);
+        mine.markDone("all set", "https://example.com/p");
+        when(assignments.findByUserId(5L)).thenReturn(List.of(mine));
+        when(assignments.findByProgrammeIdIn(any())).thenReturn(List.of(mine));
+        when(programmes.findAllById(any())).thenReturn(List.of(tour(10)));
+        when(domains.findAllById(any())).thenReturn(List.of(hl));
+        when(users.findAllById(any())).thenReturn(List.of(volunteer));
+
+        TeamViews.DomainJob job = service.myJobs(5L).get(0);
+
+        assertThat(job.done()).isTrue();
+        assertThat(job.note()).isEqualTo("all set");
+        assertThat(job.proofUrl()).isEqualTo("https://example.com/p");
+    }
+
+    private DomainAssignment myAssignment(AppUser person) {
+        DomainAssignment assignment = new DomainAssignment(TOUR, HL_ID, person.getId(), TeamRole.VOLUNTEER, 1L);
+        ReflectionTestUtils.setField(assignment, "id", 50L);
+        when(assignments.findById(50L)).thenReturn(Optional.of(assignment));
+        return assignment;
+    }
 
     private void whenOnTeam(AppUser person, TeamRole role) {
         when(assignments.existsByProgrammeIdAndDomainIdAndUserIdAndRole(TOUR, HL_ID, person.getId(), role))

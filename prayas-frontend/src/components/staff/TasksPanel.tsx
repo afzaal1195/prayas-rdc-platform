@@ -111,6 +111,29 @@ function TaskLine({ task, onChanged }: { task: TaskRow & { domainName: string };
           <strong>Volunteers:</strong> {task.volunteers.join(', ') || 'none yet'}
         </span>
       </div>
+      {task.members.length > 0 && (
+        <div className="task-members">
+          <strong>
+            {task.members.filter((m) => m.done).length} of {task.members.length} finished their part
+          </strong>
+          <ul>
+            {task.members.map((m, i) => (
+              <li key={`${m.name}-${i}`}>
+                {m.done ? '✓' : '○'} {m.name} ({m.role === 'COORDINATOR' ? 'coordinator' : 'volunteer'})
+                {m.done && m.note && <> — “{m.note}”</>}
+                {m.done && m.proofUrl && (
+                  <>
+                    {' '}
+                    <a href={m.proofUrl} target="_blank" rel="noopener noreferrer">
+                      proof
+                    </a>
+                  </>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
       {error && <p className="field-error">{error}</p>}
     </li>
   );

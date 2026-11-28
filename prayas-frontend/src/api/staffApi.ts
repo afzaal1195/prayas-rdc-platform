@@ -155,6 +155,15 @@ export async function fetchMyDomainJobs(): Promise<DomainJob[]> {
   return data;
 }
 
+/** Ticks off the signed-in person's own part of a tour. Note and proof link are both optional. */
+export async function markJobDone(assignmentId: number, note: string, proofUrl: string): Promise<void> {
+  await apiClient.post(`/api/v1/me/domain-jobs/${assignmentId}/done`, { note, proofUrl });
+}
+
+export async function undoJobDone(assignmentId: number): Promise<void> {
+  await apiClient.delete(`/api/v1/me/domain-jobs/${assignmentId}/done`);
+}
+
 /** Every domain's tasks for leads; the caller's own domains for everyone else. */
 export async function fetchTaskBoard(): Promise<TaskBoard> {
   const { data } = await apiClient.get<TaskBoard>('/api/v1/task-status');

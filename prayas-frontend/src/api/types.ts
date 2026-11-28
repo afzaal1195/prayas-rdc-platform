@@ -377,6 +377,20 @@ export interface DomainJob {
   role: TeamRole;
   jobs: string[];
   coordinatorNames: string[];
+  done: boolean;
+  completedAt: string | null;
+  note: string | null;
+  proofUrl: string | null;
+}
+
+/** One person on a domain's team for a tour, and whether they have ticked off their part. */
+export interface MemberStatus {
+  name: string;
+  role: TeamRole;
+  done: boolean;
+  completedAt: string | null;
+  note: string | null;
+  proofUrl: string | null;
 }
 
 export type RequirementKind = 'LUNCH' | 'VOLUNTEERS' | 'VENUE_APPROVALS';
@@ -396,6 +410,7 @@ export interface TaskRow {
   coordinators: string[];
   volunteers: string[];
   canSetStatus: boolean;
+  members: MemberStatus[];
 }
 
 export interface TaskCounts {

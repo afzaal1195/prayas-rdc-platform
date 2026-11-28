@@ -1,5 +1,6 @@
 package com.prayas.platform.team;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -44,6 +45,10 @@ public final class TeamViews {
             String domainName,
             TeamRole role,
             List<String> jobs,
-            List<String> coordinatorNames) {
+            List<String> coordinatorNames,
+            boolean done,
+            Instant completedAt,
+            String note,
+            String proofUrl) {
     }
 }

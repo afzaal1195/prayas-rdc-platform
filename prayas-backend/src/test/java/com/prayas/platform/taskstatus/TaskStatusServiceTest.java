@@ -160,6 +160,26 @@ class TaskStatusServiceTest {
     }
 
     @Test
+    void theBoardShowsWhoHasFinishedTheirPart() {
+        DomainAssignment volunteerDone = new DomainAssignment(TOUR, 11L, 2L, TeamRole.VOLUNTEER, 3L);
+        volunteerDone.markDone("All collected", "https://example.com/proof");
+        DomainAssignment coordinatorPending = new DomainAssignment(TOUR, 11L, 3L, TeamRole.COORDINATOR, 1L);
+        when(assignments.findByProgrammeIdIn(any())).thenReturn(List.of(volunteerDone, coordinatorPending));
+        when(users.findAllById(any())).thenReturn(List.of(coordinator, member));
+
+        TaskRow volunteers = row(service.board(lead), "VCU");
+
+        assertThat(volunteers.members()).hasSize(2);
+        assertThat(volunteers.members()).extracting(TaskStatusViews.MemberStatus::name)
+                .containsExactly("Coordinator", "Member");
+        TaskStatusViews.MemberStatus finished = volunteers.members().get(1);
+        assertThat(finished.done()).isTrue();
+        assertThat(finished.note()).isEqualTo("All collected");
+        assertThat(finished.proofUrl()).isEqualTo("https://example.com/proof");
+        assertThat(volunteers.members().get(0).done()).isFalse();
+    }
+
+    @Test
     void cancelledTasksAreLeftOut() {
         List<Requirement> cancelled = List.of(task(hl, RequirementKind.LUNCH, RequirementStatus.CANCELLED, false));
         when(requirements.findByProgrammeIds(any())).thenReturn(cancelled);

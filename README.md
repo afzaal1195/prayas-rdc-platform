@@ -64,9 +64,11 @@ A five-step request form that needs no login:
 - Date-change requests from schools appear as a banner on the request; staff approve or decline (with a reason) and nothing moves until they do.
 - Assign coordinators and volunteers to an approved tour, for the whole visit or part of it, choosing only from people who are free. Hand a shift over mid-tour to another person of the same kind.
 - An **Approvals** page for Hospitality & Logistics and the Campus Tour team: every upcoming approved tour that still needs a venue approval or the two-step lunch approval (hostel office, then mess in-charge), with who to contact and buttons to record "asked", "approved" or "denied".
-- A **Teams** page for the chain of command. For each upcoming approved tour, every domain that has a job on it (Hospitality & Logistics, Volunteer Coordination) shows its coordinators and volunteers. The faculty in-charge and leads can put anyone on any team; a domain head picks coordinators from their own domain; a coordinator picks volunteers from theirs. People see their own domain jobs on **My tours**.
+- A **Teams** page for the chain of command. For each upcoming approved tour, every domain that has a job on it (Hospitality & Logistics, Volunteer Coordination) shows its coordinators and volunteers. The faculty in-charge and leads can put anyone on any team; a domain head picks coordinators from their own domain; a coordinator picks volunteers from theirs. People see their own domain jobs on **My tasks**.
 - A **Tasks** page showing where each domain's tasks for upcoming tours stand. The faculty in-charge and leads see every domain with totals; heads, coordinators and volunteers see their own domains, with the team on each task. Coordinators and heads can set the status of tasks that aren't worked out from approvals.
 - An **Itineraries** page where the Campus Tour team plans each approved tour as a timed list of stops (a venue, or an activity like a welcome talk or lunch). Stops must fall inside the visit window and can't overlap, and a venue can't be booked by two tours at the same time. Schools see the plan on their tracking link.
+- A **My tasks** page where each person on a domain's team sees their own jobs on upcoming tours and ticks off their part, with an optional note and an optional proof link (for example a photo in a shared folder). The Tasks page shows who has finished. The ticks are cleared if the tour moves to a new date.
+- Readiness tracking on each itinerary stop (not ready, ready or blocked, with a reason when blocked). Each tour rolls up to one label that also shows on the Tour requests page, and a date change resets every stop.
 - A **My tours** page where every staff member sees their own upcoming and finished shifts, with the school, headcount and contact details.
 - Reopen a rejected request, optionally offering the school a new date. The school sees the date on their tracking link and the request reopens only when they accept it; if they decline, it stays rejected.
 - Issue a fresh tracking link for a school that lost theirs.
@@ -182,11 +184,7 @@ mvn test
 
 ## Roadmap
 
-Phase 2 continues in this order:
-
-1. **Task queues.** A Hospitality and Logistics queue and a "My tasks" page, with optional proof upload.
-
-Planned after that: photo check-ins by volunteers during a tour, and deployment.
+Planned next: photo check-ins by volunteers during a tour, uploading proof as a file instead of a link, and deployment.
 
 ## Known limitations
 

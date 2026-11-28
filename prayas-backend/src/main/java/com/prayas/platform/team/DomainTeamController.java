@@ -48,6 +48,21 @@ public class DomainTeamController {
         service.remove(assignmentId, actor);
     }
 
+    /** Ticks off the caller's own part of a tour. Only the person it belongs to may do this. */
+    @PostMapping("/me/domain-jobs/{assignmentId}/done")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void done(@PathVariable Long assignmentId,
+                     @Valid @RequestBody MarkDoneRequest request,
+                     @CurrentUser AppUser user) {
+        service.markDone(assignmentId, request, user);
+    }
+
+    @DeleteMapping("/me/domain-jobs/{assignmentId}/done")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void undo(@PathVariable Long assignmentId, @CurrentUser AppUser user) {
+        service.undoDone(assignmentId, user);
+    }
+
     @GetMapping("/me/domain-jobs")
     public List<DomainJob> mine(@CurrentUser AppUser user) {
         return service.myJobs(user.getId());

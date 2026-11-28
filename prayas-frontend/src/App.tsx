@@ -7,6 +7,7 @@ import { ApprovalsPage } from './pages/ApprovalsPage';
 import { TasksPage } from './pages/TasksPage';
 import { ItinerariesPage } from './pages/ItinerariesPage';
 import { TeamsPage } from './pages/TeamsPage';
+import { MyTasksPage } from './pages/MyTasksPage';
 import { TourStatusPage } from './pages/TourStatusPage';
 
 function App() {
@@ -15,6 +16,7 @@ function App() {
       <Route path="/" element={<RequestTourPage />} />
       <Route path="/staff" element={<StaffDashboardPage />} />
       <Route path="/staff/my-tours" element={<MyToursPage />} />
+      <Route path="/staff/my-tasks" element={<MyTasksPage />} />
       <Route path="/staff/approvals" element={<ApprovalsPage />} />
       <Route path="/staff/tasks" element={<TasksPage />} />
       <Route path="/staff/itineraries" element={<ItinerariesPage />} />

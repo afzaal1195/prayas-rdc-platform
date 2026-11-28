@@ -31,6 +31,16 @@ public class DomainAssignment {
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
 
+    // Set when the person ticks off their own part of the tour (see V9__domain_assignment_done.sql).
+    @Column(name = "completed_at")
+    private Instant completedAt;
+
+    @Column(name = "completion_note", length = 500)
+    private String completionNote;
+
+    @Column(name = "proof_url", length = 500)
+    private String proofUrl;
+
     protected DomainAssignment() {
         // JPA
     }
@@ -42,6 +52,24 @@ public class DomainAssignment {
         this.role = role;
         this.assignedBy = assignedBy;
     }
+
+    public void markDone(String note, String proofUrl) {
+        this.completedAt = Instant.now();
+        this.completionNote = note;
+        this.proofUrl = proofUrl;
+    }
+
+    /** Back to "not done yet": the note and proof go with it. */
+    public void reopen() {
+        this.completedAt = null;
+        this.completionNote = null;
+        this.proofUrl = null;
+    }
+
+    public boolean isDone() { return completedAt != null; }
+    public Instant getCompletedAt() { return completedAt; }
+    public String getCompletionNote() { return completionNote; }
+    public String getProofUrl() { return proofUrl; }
 
     public Long getId() { return id; }
     public Long getProgrammeId() { return programmeId; }

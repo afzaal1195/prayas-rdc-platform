@@ -114,7 +114,8 @@ public class TaskStatusService {
                     schools.computeIfAbsent(r.getProgrammeId(), this::schoolName),
                     tour.getVisitDate(), r.getKind(), title(r.getKind()), r.getStatus(), r.needsAttention(),
                     r.getDueDate(), progress(r.getKind(), stepsByTour.getOrDefault(r.getProgrammeId(), List.of())),
-                    names(team, TeamRole.COORDINATOR, people), names(team, TeamRole.VOLUNTEER, people), canSet));
+                    names(team, TeamRole.COORDINATOR, people), names(team, TeamRole.VOLUNTEER, people), canSet,
+                    members(team, people)));
         }
 
         List<DomainStatus> domains = new ArrayList<>();
@@ -170,6 +171,15 @@ public class TaskStatusService {
 
     private String schoolName(Long programmeId) {
         return tourDetails.findByProgrammeId(programmeId).map(d -> d.getSchool().getName()).orElse("(no details)");
+    }
+
+    private static List<MemberStatus> members(List<DomainAssignment> team, Map<Long, AppUser> people) {
+        return team.stream()
+                .sorted(Comparator.comparing(DomainAssignment::getRole))
+                .map(a -> new MemberStatus(
+                        people.containsKey(a.getUserId()) ? people.get(a.getUserId()).getFullName() : "Unknown",
+                        a.getRole(), a.isDone(), a.getCompletedAt(), a.getCompletionNote(), a.getProofUrl()))
+                .toList();
     }
 
     private static List<String> names(List<DomainAssignment> team, TeamRole role, Map<Long, AppUser> people) {
