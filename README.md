@@ -4,7 +4,7 @@ An operations platform for PRAYAS, Rural Development Centre (RDC), IIT Hyderabad
 
 Today a visit is arranged over calls, messages and spreadsheets. This platform gives schools one place to request and manage a visit, and gives PRAYAS staff one place to review requests, enforce capacity rules and hand work to the right domain.
 
-**Status:** Phase 1 and the first milestone of Phase 2 are complete and running locally. The project is not deployed yet. See [Roadmap](#roadmap) for what is still to come.
+**Status:** Phases 1 and 2 are complete and running locally: requests, approvals, teams, tasks, itineraries and readiness tracking. The project is not deployed yet. See [Roadmap](#roadmap) for what is still to come.
 
 ## Screenshots
 
@@ -24,6 +24,14 @@ A five-step request form that needs no login:
 
 ![Repeat request blocked](docs/schools/repeat-request-blocked.png)
 
+**Tracking link: a new date offered by staff.** When a rejected request is reopened with a new date, the school sees it here and the request reopens only once they accept:
+
+![Date offered](docs/schools/date-offered.png)
+
+**Tracking link: the plan for the day**, once staff have planned the stops:
+
+![Plan for the day](docs/schools/school-plan.png)
+
 ### For staff
 
 | Sign in | Coordinator view (read-only) |
@@ -37,6 +45,30 @@ A five-step request form that needs no login:
 **My tours**, where each coordinator or volunteer sees only their own shifts (shown here as a volunteer, using the "Test as" switcher):
 
 ![My tours](docs/staff/my-tours.png)
+
+**Tour requests**, where approved tours also show how ready their itinerary is:
+
+![Tour requests with readiness](docs/staff/tour-requests-readiness.png)
+
+**Teams**, the chain of command: a domain head picks coordinators, and a coordinator picks volunteers, from their own domain (shown as the Hospitality & Logistics head):
+
+![Teams](docs/staff/teams.png)
+
+**Approvals**, with venue permissions and the two-step lunch approval (the mess step opens only once the hostel office has approved):
+
+![Approvals](docs/staff/approvals.png)
+
+**Itineraries**, with each stop marked Ready, Not ready or Blocked (a block needs a reason) and one readiness label for the tour:
+
+![Itineraries](docs/staff/itineraries.png)
+
+**Tasks**, where leads see every domain and everyone sees who has finished their part:
+
+![Tasks](docs/staff/tasks-lead.png)
+
+| My tasks: not done yet | My tasks: part done, with a note and proof link |
+| --- | --- |
+| [![My tasks](docs/staff/my-tasks.png)](docs/staff/my-tasks.png) | [![My tasks, done](docs/staff/my-tasks-done.png)](docs/staff/my-tasks-done.png) |
 
 | Venues | Approval contacts | Staff and roles |
 | --- | --- | --- |
@@ -169,6 +201,12 @@ The app runs at `http://localhost:5173`:
 | `/` | Public request form |
 | `/status/<token>` | Tracking page for a submitted request |
 | `/staff` | Staff dashboard |
+| `/staff/my-tours` | The signed-in person's own shifts |
+| `/staff/my-tasks` | The signed-in person's own jobs, to tick off |
+| `/staff/tasks` | Where each domain's tasks stand |
+| `/staff/approvals` | Venue and lunch approvals |
+| `/staff/teams` | Coordinators and volunteers for each tour |
+| `/staff/itineraries` | Plan and readiness for each tour |
 | `/staff/admin` | Admin page (Lead and Faculty in-charge) |
 
 Staff sign-in works only for accounts that exist in the `app_user` table. Create the first Lead account directly in the database, then add everyone else from the admin page.
